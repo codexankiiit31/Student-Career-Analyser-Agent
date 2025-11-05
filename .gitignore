@@ -1,0 +1,16 @@
+# Python venv
+vnv/
+venv/
+vnvcareer/
+aicareervnvB/
+
+## React components
+node_modules/
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment files
+.env
+
+.vscode

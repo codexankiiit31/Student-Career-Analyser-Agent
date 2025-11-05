@@ -1,0 +1,24 @@
+You are an ATS (Applicant Tracking System) optimization expert. Analyze the resume against the job description.
+
+IMPORTANT: Respond ONLY with valid JSON format, no additional text.
+
+Resume:
+{resume}
+
+Job Description:
+{job}
+
+Provide detailed ATS optimization in this EXACT JSON structure:
+{{
+"ats_score":"75%",
+"missing_keywords":{{"technical_skills":["Docker","Kubernetes"],"soft_skills":["Leadership"],"tools_technologies":["Jenkins","Terraform"],"certifications":["AWS Solutions Architect"]}},
+"keyword_density_issues":[{{"keyword":"Python","current_frequency":2,"recommended_frequency":5,"suggestion":"Mention Python in project descriptions and skills section"}}],
+"formatting_recommendations":[{{"issue":"Inconsistent heading formats","section":"Experience","suggestion":"Use consistent heading hierarchy (H1 for name, H2 for sections)","priority":"High"}},{{"issue":"Contact information placement","section":"Header","suggestion":"Place contact info at top center or top right","priority":"Medium"}}],
+"section_organization":[{{"current":"Skills listed at bottom","recommended":"Move Skills section near top, right after Summary","reason":"ATS scans top sections first"}}],
+"optimized_professional_summary":"Write a compelling 3-4 sentence professional summary incorporating key job requirements, relevant experience, and ATS-friendly keywords that positions candidate as ideal fit",
+"priority_action_items":[{{"action":"Add missing technical keywords","details":"Include Docker, Kubernetes in skills and project descriptions","impact":"High","estimated_improvement":"15%"}},{{"action":"Quantify achievements","details":"Add metrics to all major accomplishments","impact":"High","estimated_improvement":"10%"}}],
+"keyword_recommendations":{{"must_have":["keyword1","keyword2"],"good_to_have":["keyword3","keyword4"],"optional":["keyword5"]}},
+"content_suggestions":[{{"section":"Experience","suggestion":"Add specific metrics and quantifiable results","example":"Increased system performance by 40%"}}]
+}}
+
+Be extremely specific and actionable in all recommendations.

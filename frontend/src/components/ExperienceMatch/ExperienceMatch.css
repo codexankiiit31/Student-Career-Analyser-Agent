@@ -1,0 +1,360 @@
+.experience-match {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Analysis Cards */
+.analysis-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 2rem;
+  color: white;
+}
+
+.card-header.experience {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card-header.education {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.card-header.strengths {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.card-header.improvements {
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+}
+
+.card-header.requirements {
+  background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.card-content {
+  padding: 2rem;
+}
+
+.analysis-text {
+  color: #4a5568;
+  line-height: 1.8;
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+/* Comparison Grid */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.comparison-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.comparison-item .label {
+  font-size: 0.875rem;
+  color: #718096;
+  font-weight: 600;
+}
+
+.comparison-item .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.comparison-item .value.required {
+  color: #667eea;
+}
+
+.comparison-item .value.candidate {
+  color: #48bb78;
+}
+
+/* Education List */
+.education-list {
+  margin-top: 1.5rem;
+}
+
+.education-list h4 {
+  margin: 0 0 1rem;
+  color: #2d3748;
+  font-size: 1rem;
+}
+
+.education-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+.education-item svg {
+  color: #4facfe;
+  flex-shrink: 0;
+}
+
+.education-info {
+  flex: 1;
+}
+
+.education-degree {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.25rem;
+}
+
+.education-institution {
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+/* Strengths and Improvements */
+.strengths-improvements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.strength-card,
+.improvement-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.text-content {
+  color: #4a5568;
+  line-height: 1.8;
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.text-content.success {
+  background: #f0fff4;
+  border-left: 4px solid #48bb78;
+}
+
+.text-content.warning {
+  background: #fffaf0;
+  border-left: 4px solid #ed8936;
+}
+
+/* Recommendations Section */
+.recommendations-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+  color: #ed8936;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.25rem;
+}
+
+.recommendations-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.recommendation-card {
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 12px;
+  border-left: 4px solid #667eea;
+  transition: all 0.2s ease;
+}
+
+.recommendation-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.rec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.rec-number {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.rec-priority {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.rec-priority.priority-high {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.rec-priority.priority-medium {
+  background: #feebc8;
+  color: #c05621;
+}
+
+.rec-priority.priority-low {
+  background: #c6f6d5;
+  color: #276749;
+}
+
+.rec-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rec-section {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.rec-label {
+  color: #718096;
+  font-weight: 600;
+}
+
+.rec-value {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.rec-recommendation {
+  color: #2d3748;
+  font-size: 1rem;
+}
+
+.rec-guidance,
+.rec-example {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.rec-guidance svg,
+.rec-example svg {
+  color: #ed8936;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Requirements Card */
+.requirements-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.requirements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.requirements-list li {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.requirements-list li:last-child {
+  border-bottom: none;
+}
+
+.requirements-list li::before {
+  content: "✓";
+  color: #9f7aea;
+  font-weight: bold;
+  margin-right: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .strengths-improvements {
+    grid-template-columns: 1fr;
+  }
+
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-content {
+    padding: 1.5rem;
+  }
+}

@@ -1,0 +1,44 @@
+# Core Framework
+fastapi==0.115.2
+uvicorn==0.31.1
+python-multipart==0.0.9
+
+langchain==0.3.4
+langchain-core==0.3.63
+langchain-community==0.3.3
+langchain-google-genai==2.0.10
+langchain-openai==0.2.5
+langchain-text-splitters==0.3.8
+langsmith>=0.1.17,<0.2.0
+
+
+
+# Embeddings & Vector Operations
+faiss-cpu==1.8.0
+sentence-transformers==3.1.1
+
+# File Parsing (Resume PDFs / DOCX)
+PyMuPDF==1.24.10
+python-docx==1.1.2
+pdfplumber==0.11.4
+
+# Utilities
+pydantic==2.9.2
+python-dotenv==1.0.1
+tqdm==4.66.5
+numpy==1.26.4
+pandas==2.2.3
+
+# Optional (for text cleaning / preprocessing)
+nltk==3.9.1
+spacy==3.7.5
+
+# Optional for development / debugging
+httpx==0.27.2
+
+
+# NEW: Web Scraping Stack
+beautifulsoup4==4.12.3
+lxml==5.1.0
+aiohttp==3.10.5
+requests==2.32.3

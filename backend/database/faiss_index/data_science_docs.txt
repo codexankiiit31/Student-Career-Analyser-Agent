@@ -1,0 +1,22 @@
+# Career: data science
+
+## Roadmap.sh Content:
+Roadmap for data science development path.
+
+## GeeksforGeeks Content:
+Technical guide for data science.
+
+## FreeCodeCamp Content:
+Learning resources for data science.
+
+## YouTube Video References:
+
+- The Complete Data Science Roadmap by Programming with Mosh
+  URL: https://www.youtube.com/watch?v=9R3X0JoCLyU
+
+- What is Data Science? | Completely RoadMap | Simply Explained by Shradha Khapra Ma&#39;am by Apna College
+  URL: https://www.youtube.com/watch?v=uIUvpJdYgSA
+
+- The Complete Data Analyst Roadmap by Programming with Mosh
+  URL: https://www.youtube.com/watch?v=YRJbhFLLPyE
+---DOCUMENT_SEPARATOR---

@@ -1,0 +1,30 @@
+Analyze this job description and provide a detailed JSON with:
+1. Key technical skills required  
+2. Soft skills required
+3. Years of experience required
+4. Education requirements
+5. Key responsibilities
+6. Company culture indicators
+7. Required certifications
+8. Industry type
+9. Job level (entry, mid, senior)  
+10. Key technologies mentioned
+
+IMPORTANT: Respond ONLY with valid JSON format, no additional text.
+
+Format the response as this EXACT JSON structure:
+{{
+    "technical_skills": ["skill1", "skill2", "skill3"],
+    "soft_skills": ["communication", "teamwork"],
+    "years_experience": "3-5 years",
+    "education_requirements": ["Bachelor's in Computer Science"],
+    "key_responsibilities": ["responsibility1", "responsibility2"],
+    "company_culture": "collaborative, innovative environment",
+    "certifications": ["AWS", "PMP"],
+    "industry_type": "Technology",
+    "job_level": "mid-level",
+    "key_technologies": ["Python", "AWS", "Docker"]
+}}
+
+Job Description:
+{description}

@@ -1,0 +1,29 @@
+You are a professional resume analyzer. Compare the provided job requirements and resume to generate a detailed analysis in valid JSON format.
+
+IMPORTANT: Respond ONLY with a valid JSON object and NO additional text or formatting.
+
+Job Requirements:
+{job}
+
+Resume Details:
+{resume}
+
+Embedding Similarity Score: {similarity}%
+
+Generate a response following this EXACT structure:
+{{
+"overall_match_percentage":"85%",
+"embedding_similarity":"{similarity}%",
+"matching_skills":[{{"skill_name":"Python","is_match":true,"proficiency_level":"Expert"}},{{"skill_name":"AWS","is_match":true,"proficiency_level":"Intermediate"}}],
+"missing_skills":[{{"skill_name":"Docker","is_match":false,"priority":"High","suggestion":"Consider obtaining Docker certification or hands-on practice"}}],
+"skills_gap_analysis":{{"technical_skills":"Detailed technical gap analysis with specific recommendations","soft_skills":"Detailed soft skills gap analysis with actionable steps"}},
+"experience_match_analysis":"Comprehensive experience match analysis comparing years, roles, and responsibilities",
+"education_match_analysis":"Detailed education match analysis including degree relevance and institution credibility",
+"recommendations_for_improvement":[{{"recommendation":"Add specific metrics to achievements","section":"Experience","guidance":"Quantify achievements with numbers, percentages, or dollar amounts","priority":"High","example":"Managed team → Led team of 8 developers, reducing deployment time by 40%"}}],
+"ats_optimization_suggestions":[{{"section":"Skills","current_content":"Current format description","suggested_change":"Specific actionable change","keywords_to_add":["keyword1","keyword2","keyword3"],"formatting_suggestion":"Use bullet points with skill categories","reason":"Improves ATS parsing and keyword matching"}}],
+"key_strengths":"List 3-5 specific key strengths with evidence from resume",
+"areas_of_improvement":"List 3-5 specific areas needing improvement with actionable steps",
+"selection_probability":"Realistic percentage (0-100%) with brief justification"
+}}
+
+Focus on providing detailed, actionable insights for each field. Analyze deeply and provide specific recommendations.

@@ -1,0 +1,36 @@
+You are a professional cover letter writer. Create a compelling, personalized cover letter.
+
+IMPORTANT: Respond ONLY with valid JSON format, no additional text.
+
+Resume:
+{resume}
+
+Job Description:
+{job}
+
+Generate a response in this EXACT JSON structure:
+{{
+"cover_letter":"[Complete cover letter text with proper formatting, 250-300 words]",
+"tone":"professional",
+"word_count":280,
+"key_highlights":["Highlight 1: Specific achievement mentioned","Highlight 2: Relevant skill showcased","Highlight 3: Culture fit demonstrated"],
+"customization_notes":"Brief notes on how the letter was tailored to this specific job",
+"opening_hook":"The specific compelling opening used",
+"call_to_action":"The specific closing call to action used",
+"suggested_improvements":["Optional suggestion 1","Optional suggestion 2"]
+}}
+
+Cover Letter Requirements:
+1. Opening: Express genuine enthusiasm, mention specific role, include compelling hook
+2. Body (2-3 paragraphs): 
+   - Highlight 2-3 most relevant achievements with specific examples
+   - Connect skills to job requirements
+   - Show understanding of company needs
+   - Demonstrate value proposition
+3. Closing: Reiterate interest, strong call to action, thank reader
+4. Tone: Professional yet personable, confident without arrogance
+5. Style: Job-specific (NO generic statements), achievement-focused
+6. Length: 250-300 words exactly
+7. Format: Proper business letter format
+
+Make it ATS-friendly with relevant keywords from the job description.

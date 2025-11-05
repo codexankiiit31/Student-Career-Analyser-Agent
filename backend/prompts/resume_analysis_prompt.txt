@@ -1,0 +1,30 @@
+Analyze this resume and provide a detailed JSON with:
+1. Technical skills
+2. Soft skills
+3. Years of experience
+4. Education details
+5. Key achievements
+6. Core competencies  
+7. Industry experience
+8. Leadership experience
+9. Technologies used
+10. Projects completed
+
+IMPORTANT: Respond ONLY with valid JSON format, no additional text.
+
+Format the response as this EXACT JSON structure:
+{{
+    "technical_skills": ["Python", "JavaScript", "AWS"],
+    "soft_skills": ["leadership", "communication"],
+    "years_experience": "5 years",
+    "education": [{{"degree": "Bachelor's", "field": "Computer Science", "institution": "XYZ University"}}],
+    "key_achievements": ["achievement1", "achievement2"],
+    "core_competencies": ["competency1", "competency2"],
+    "industry_experience": ["Technology", "Finance"],
+    "leadership_experience": ["Led team of 5 developers"],
+    "technologies_used": ["React", "Node.js", "MongoDB"],
+    "projects": ["Project 1: Description", "Project 2: Description"]
+}}
+
+Resume:
+{resume}
