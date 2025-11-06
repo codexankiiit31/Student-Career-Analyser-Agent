@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Target, TrendingUp, CheckCircle, Sparkles } from 'lucide-react';
 import apiService from '../services/api';
-import './Dashboard.css';
-import './DashboardNew.css';
+import '../Styles/Dashboard.css';
+import '../Styles/DashboardNew.css';
 
 const Dashboard = () => {
   const [backendStatus, setBackendStatus] = useState(null);

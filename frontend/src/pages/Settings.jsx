@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { Settings as SettingsIcon, Trash2, AlertCircle } from 'lucide-react';
 import apiService from '../services/api';
-import './Pages.css';
+import '../Styles/Pages.css';
 
 const Settings = () => {
   const [clearing, setClearing] = useState(false);

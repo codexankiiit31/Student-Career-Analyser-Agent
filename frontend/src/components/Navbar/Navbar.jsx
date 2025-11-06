@@ -9,6 +9,8 @@ const Navbar = () => {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: Home },
     { path: '/job-analyzer', label: 'Job Analyzer', icon: Target },
+    { path: '/market-analyzer', label: 'Market Analyzer', icon: Target },
+    { path: '/roadmap', label: 'RoadMap', icon: Target },
     { path: '/settings', label: 'Settings', icon: Settings },
   ];
 

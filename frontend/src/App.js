@@ -11,6 +11,8 @@ import JobAnalyzer from './pages/JobAnalyzer.jsx';
 import Settings from './pages/Settings.jsx';
 
 import './App.css';
+import MarketAnalyzer from './pages/MarketAnalyzer.jsx';
+import RoadMap from './pages/RoadMap.jsx';
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
             <Route path="/match" element={<JobAnalyzer />} />
             <Route path="/ats" element={<JobAnalyzer />} />
             <Route path="/cover-letter" element={<JobAnalyzer />} />
+            <Route path="/market-analyzer" element={<MarketAnalyzer />} />
+            <Route path="/roadmap" element={<RoadMap />} />
           </Routes>
         </main>
         <ToastContainer

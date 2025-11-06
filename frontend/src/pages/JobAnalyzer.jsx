@@ -11,7 +11,7 @@ import SkillsAnalysis from '../components/SkillsAnalysis/SkillsAnalysis';
 import ExperienceMatch from '../components/ExperienceMatch/ExperienceMatch';
 import ATSRecommendations from '../components/ATSRecommendations/ATSRecommendations';
 import CoverLetterGenerator from '../components/CoverLetterGenerator/CoverLetterGenerator';
-import './JobAnalyzer.css';
+import '../Styles/JobAnalyzer.css';
 
 const JobAnalyzer = () => {
   const [activeTab, setActiveTab] = useState('upload');

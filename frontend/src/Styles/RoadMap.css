@@ -1,0 +1,222 @@
+/* === Global Container === */
+.roadmap-container {
+  font-family: "Poppins", sans-serif;
+  color: #222;
+  overflow-x: hidden;
+}
+
+/* === Hero Section === */
+.roadmap-hero {
+  position: relative;
+  width: 100%;
+  height: 90vh;
+  overflow: hidden;
+}
+
+.roadmap-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  z-index: 1;
+}
+
+.hero-overlay {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  width: 100%;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 2rem;
+}
+
+.hero-overlay h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.hero-overlay p {
+  font-size: 1.2rem;
+  max-width: 750px;
+  line-height: 1.7;
+}
+
+/* === Form Section === */
+.roadmap-form-section {
+  padding: 4rem 10%;
+  background: linear-gradient(180deg, #f8fafc, #e2e8f0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-wrapper {
+  width: 100%;
+  max-width: 800px;
+}
+
+.roadmap-form {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  padding: 3rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.8s ease;
+}
+
+.form-title {
+  text-align: center;
+  color: #1e3a8a;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.form-subtitle {
+  text-align: center;
+  color: #475569;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+}
+
+/* Input Grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 0.4rem;
+}
+
+.form-group input {
+  padding: 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font-size: 1rem;
+  transition: 0.3s;
+  background: #fff;
+}
+
+.form-group input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  outline: none;
+}
+
+.error-text {
+  color: #ef4444;
+  text-align: center;
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+/* Button */
+.btn-container {
+  text-align: center;
+  margin-top: 2.5rem;
+}
+
+.generate-btn {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+  padding: 1rem 2.5rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+}
+
+.generate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+/* === Result Section === */
+.roadmap-result-section {
+  padding: 3rem 10%;
+  background: #fff;
+}
+
+.result-box {
+  background: #f1f5f9;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+}
+
+.week-plan {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.week-card {
+  background: #fff;
+  border-left: 5px solid #3b82f6;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.week-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 18px rgba(59, 130, 246, 0.2);
+}
+
+.week-card h4 {
+  margin-bottom: 0.8rem;
+  color: #1e3a8a;
+}
+
+.week-card ul {
+  margin-left: 1.2rem;
+  color: #374151;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-overlay h1 {
+    font-size: 2rem;
+  }
+
+  .hero-overlay p {
+    font-size: 1rem;
+  }
+
+  .roadmap-form {
+    padding: 2rem;
+  }
+}
