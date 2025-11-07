@@ -7,7 +7,7 @@ from langchain.schema import Document
 from utils.career_retriever import CareerRetriever
 from utils.llm_utils import get_llm, get_settings
 
-from agents.career_scraper import CareerScraper
+from scraping.Roadmap_data import CareerScraper
 
 
 class RoadmapAgent:

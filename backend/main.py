@@ -13,13 +13,13 @@ from datetime import datetime
 # from utils.process_utils import extract_and_clean_text
 from utils.similarity_search import compute_similarity
 from utils.response_formetter import format_match_response, format_ats_response, format_cover_letter, format_error_response,extract_and_clean_text
-from agents.job_anayzer import CareerAgent
+from agents.job_anayzer_agent import CareerAgent
 
 # Market Analysis imports
-from agents.market_agent import MarketAnalysisAgent
+from agents.market_insights_agent import MarketAnalysisAgent
 
 # NEW: Career Roadmap imports
-from agents.career_agent import RoadmapAgent
+from agents.Roadmap_agent import RoadmapAgent
 
 # ============================================
 # APP INITIALIZATION

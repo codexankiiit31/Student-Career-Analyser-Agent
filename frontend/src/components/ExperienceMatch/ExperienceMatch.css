@@ -338,7 +338,7 @@
 }
 
 .requirements-list li::before {
-  content: "✓";
+  content: "âœ“";
   color: #9f7aea;
   font-weight: bold;
   margin-right: 0.75rem;

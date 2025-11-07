@@ -49,5 +49,3 @@ Based on the provided context information and the user's query, generate a compr
 
 **User Query:**
 {query}
-
-Now generate the detailed roadmap:

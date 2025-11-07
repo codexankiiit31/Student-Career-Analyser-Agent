@@ -25,7 +25,8 @@ class CareerAgent:
         Returns:
             Prompt template string
         """
-        prompt_path = self.prompts_dir / file_name
+        # prompt_path = self.prompts_dir / file_name
+        prompt_path = self.prompts_dir / "job_anaylzer" / file_name
         
         if not prompt_path.exists():
             raise FileNotFoundError(f"Prompt file not found: {prompt_path}")

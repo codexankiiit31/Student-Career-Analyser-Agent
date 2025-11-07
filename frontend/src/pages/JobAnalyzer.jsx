@@ -8,7 +8,6 @@ import apiService from '../services/api';
 import ResumeUploader from '../components/ResumeUploader/ResumeUploader';
 import JobDescriptionForm from '../components/JobDescriptionForm/JobDescriptionForm';
 import SkillsAnalysis from '../components/SkillsAnalysis/SkillsAnalysis';
-import ExperienceMatch from '../components/ExperienceMatch/ExperienceMatch';
 import ATSRecommendations from '../components/ATSRecommendations/ATSRecommendations';
 import CoverLetterGenerator from '../components/CoverLetterGenerator/CoverLetterGenerator';
 import '../Styles/JobAnalyzer.css';
@@ -19,7 +18,6 @@ const JobAnalyzer = () => {
   const [jobAnalyzed, setJobAnalyzed] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   
-  // Store analysis data
   const [matchData, setMatchData] = useState(null);
   const [atsData, setAtsData] = useState(null);
   const [coverLetterData, setCoverLetterData] = useState(null);
@@ -27,7 +25,6 @@ const JobAnalyzer = () => {
   const tabs = [
     { id: 'upload', label: 'Upload & Analyze', icon: Upload },
     { id: 'skills', label: 'Skills Analysis', icon: Target, disabled: !matchData },
-    { id: 'experience', label: 'Experience Match', icon: Briefcase, disabled: !matchData },
     { id: 'ats', label: 'ATS Recommendations', icon: Zap, disabled: !atsData },
     { id: 'cover-letter', label: 'Cover Letter', icon: Mail, disabled: !coverLetterData },
   ];
@@ -53,23 +50,20 @@ const JobAnalyzer = () => {
     setAnalyzing(true);
 
     try {
-      // Step 1: Match Analysis
       toast.info('Analyzing resume-job match...');
       const matchResponse = await apiService.matchResumeJob();
       setMatchData(matchResponse);
       
-      // Step 2: ATS Optimization
       toast.info('Getting ATS recommendations...');
       const atsResponse = await apiService.getATSOptimization();
       setAtsData(atsResponse);
       
-      // Step 3: Cover Letter Generation
       toast.info('Generating cover letter...');
       const coverLetterResponse = await apiService.generateCoverLetter();
       setCoverLetterData(coverLetterResponse);
 
       toast.success('Complete analysis finished!');
-      setActiveTab('skills'); // Switch to first results tab
+      setActiveTab('skills');
       
     } catch (error) {
       toast.error(error.detail || 'Analysis failed. Please try again.');
@@ -122,7 +116,6 @@ const JobAnalyzer = () => {
               </div>
             )}
 
-            {/* Debug Info - Remove after testing */}
             <div style={{ 
               marginTop: '2rem', 
               padding: '1rem', 
@@ -169,13 +162,6 @@ const JobAnalyzer = () => {
           <EmptyState message="No skills analysis available. Please complete the upload and analysis first." />
         );
 
-      case 'experience':
-        return matchData ? (
-          <ExperienceMatch data={matchData} />
-        ) : (
-          <EmptyState message="No experience match data available. Please complete the upload and analysis first." />
-        );
-
       case 'ats':
         return atsData ? (
           <ATSRecommendations data={atsData} />
@@ -203,7 +189,6 @@ const JobAnalyzer = () => {
         <p>Upload your resume, analyze job descriptions, and get AI-powered insights</p>
       </div>
 
-      {/* Tab Navigation */}
       <div className="tabs-container">
         <div className="tabs-nav">
           {tabs.map((tab) => {
@@ -222,7 +207,6 @@ const JobAnalyzer = () => {
           })}
         </div>
 
-        {/* Tab Content */}
         <div className="tab-content">
           {renderTabContent()}
         </div>
