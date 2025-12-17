@@ -449,12 +449,3 @@ For questions, issues, or suggestions:
 
 ---
 
-<div align="center">
-
-**Made with ❤️ for career seekers worldwide**
-
-⭐ Star this repo if you find it helpful!
-
-[Report Bug](https://github.com/yourusername/ai-career-analyzer/issues) · [Request Feature](https://github.com/yourusername/ai-career-analyzer/issues)
-
-</div>
