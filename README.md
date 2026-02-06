@@ -448,19 +448,19 @@ Navigate to `http://localhost:3000` in your browser.
 ## 📸 Screenshots
 
 ### Job Analyzer - Skills Analysis
-![Skills Analysis](screenshots/skills-analysis.png)
+
 - Overall Match: **65%**
 - Selection Probability: **70%**
 - Matching vs Missing Skills: **9/7**
 
 ### ATS Optimization
-![ATS Optimization](screenshots/ats-optimization.png)
+
 - ATS Compatibility Score: **75%**
 - Missing keywords categorized by type
 - Actionable recommendations
 
 ### Cover Letter Generator
-![Cover Letter](screenshots/cover-letter.png)
+
 - Professional 268-word cover letter
 - Copy, Download, and Print options
 - Personalized based on resume and job description
@@ -507,11 +507,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 👥 Authors
 
-- **Your Name** - *Initial work* - [YourGitHub](https://github.com/yourusername)
-
----
 
 ## 🙏 Acknowledgments
 
@@ -531,23 +527,11 @@ For questions or support, please reach out:
 
 ---
 
-## 🌐 Demo
 
-Check out the live demo: [AI Career Agent Demo](https://your-demo-link.com)
-
----
-
-## ⭐ Star History
-
-If you find this project helpful, please consider giving it a star!
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/ai-career-agent&type=Date)](https://star-history.com/#yourusername/ai-career-agent&Date)
-
----
 
 <div align="center">
 
-**Made with ❤️ for students worldwide**
+
 
 [Report Bug](https://github.com/yourusername/ai-career-agent/issues) · [Request Feature](https://github.com/yourusername/ai-career-agent/issues)
 
