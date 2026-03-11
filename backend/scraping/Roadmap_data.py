@@ -1,201 +1,144 @@
-# ==================== career_scraper.py ====================
-"""Career Scraper — Fetches latest career roadmap and learning data"""
+# scraper.py
 
 import os
-import time
-from typing import List, Dict
-from pathlib import Path
 import requests
+from typing import List, Dict
 from bs4 import BeautifulSoup
-from googleapiclient.discovery import build
+from dotenv import load_dotenv
 
-from utils.llm_utils import get_settings
+# Load environment variables from .env file
+load_dotenv()
+# ================= CONFIG =================
 
-# Load settings from .env via llm_utils
-settings = get_settings()
+SERP_API_KEY = os.getenv("SERPAPI_API_KEY")
+SERP_API_URL = "https://serpapi.com/search.json"
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0"
+}
 
 
-class CareerScraper:
-    """Handles scraping data from multiple career learning platforms"""
+# ================= SCRAPER CLASS =================
 
+class RoadmapScraper:
     def __init__(self):
-        """Initialize HTTP headers and YouTube API client"""
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        if not SERP_API_KEY:
+            raise ValueError("SerpAPI key is missing")
+
+        self.serp_api_key = SERP_API_KEY
+
+    # -----------------------------
+    # STEP 1: Discover roadmap pages
+    # -----------------------------
+    def discover_pages(self, topic: str, limit: int = 5) -> List[str]:
+        query = f"{topic} roadmap learning path"
+
+        params = {
+            "engine": "google",
+            "q": query,
+            "api_key": self.serp_api_key,
+            "num": limit
         }
 
-        # Initialize YouTube API client
-        self.youtube = build(
-            "youtube",
-            "v3",
-            developerKey=settings["YOUTUBE_API_KEY"]
-        )
+        response = requests.get(SERP_API_URL, params=params, timeout=10)
+        response.raise_for_status()
 
-    def scrape_roadmap_sh(self, career: str) -> str:
-        """Scrape roadmap.sh for structured career paths"""
-        try:
-            roadmap_map = {
-                "full stack": "full-stack",
-                "frontend": "frontend",
-                "backend": "backend",
-                "devops": "devops",
-                "data science": "data-scientist",
-                "machine learning": "ml-engineer",
-                "android": "android",
-                "ios": "ios",
-                "python": "python",
-                "java": "java",
-                "react": "react",
-                "nodejs": "nodejs",
-                "cyber security": "cyber-security",
-                "blockchain": "blockchain",
-            }
+        data = response.json()
+        urls = []
 
-            slug = roadmap_map.get(career.lower(), "full-stack")
-            url = f"https://roadmap.sh/{slug}"
+        for item in data.get("organic_results", []):
+            link = item.get("link")
+            if link:
+                urls.append(link)
 
-            response = requests.get(url, headers=self.headers, timeout=settings["REQUEST_TIMEOUT"])
-            response.raise_for_status()
+            if len(urls) >= limit:
+                break
 
-            soup = BeautifulSoup(response.content, "html.parser")
+        return urls
 
-            content = []
-            title = soup.find("h1")
-            if title:
-                content.append(f"# {title.get_text(strip=True)}")
+    # -----------------------------
+    # STEP 2: Fetch page HTML
+    # -----------------------------
+    def fetch_page(self, url: str) -> str:
+        response = requests.get(url, headers=HEADERS, timeout=10)
+        response.raise_for_status()
+        return response.text
 
-            description = soup.find("meta", {"name": "description"})
-            if description:
-                content.append(description.get("content", ""))
+    # -----------------------------
+    # STEP 3: Clean HTML → text
+    # -----------------------------
+    def clean_text(self, html: str) -> str:
+        soup = BeautifulSoup(html, "html.parser")
 
-            for tag in soup.find_all(["p", "h2", "h3", "li"])[:50]:
-                text = tag.get_text(strip=True)
-                if len(text) > 20:
-                    content.append(text)
+        for tag in soup([
+            "script", "style", "nav",
+            "footer", "header", "aside"
+        ]):
+            tag.decompose()
 
-            return "\n".join(content)
+        text = soup.get_text(separator="\n")
+        lines = [
+            line.strip()
+            for line in text.splitlines()
+            if len(line.strip()) > 40
+        ]
 
-        except Exception as e:
-            print(f"Error scraping roadmap.sh: {e}")
-            return f"Roadmap for {career} development path."
+        return "\n".join(lines)
 
-    def scrape_geeksforgeeks(self, career: str) -> str:
-        """Scrape GeeksforGeeks for career guides"""
-        try:
-            url = f"https://www.geeksforgeeks.org/{career.replace(' ', '-')}-roadmap/"
-            response = requests.get(url, headers=self.headers, timeout=settings["REQUEST_TIMEOUT"])
-            response.raise_for_status()
+    # -----------------------------
+    # STEP 4: Roadmap quality filter
+    # -----------------------------
+    def is_roadmap_content(self, text: str) -> bool:
+        keywords = [
+            "roadmap", "step", "phase",
+            "week", "month",
+            "beginner", "intermediate", "advanced"
+        ]
 
-            soup = BeautifulSoup(response.content, "html.parser")
-            article = soup.find("div", class_="text")
+        score = sum(1 for k in keywords if k in text.lower())
+        return score >= 3
 
-            content = []
-            if article:
-                for tag in article.find_all(["p", "h2", "h3", "li"])[:40]:
-                    text = tag.get_text(strip=True)
-                    if len(text) > 20:
-                        content.append(text)
+    # -----------------------------
+    # STEP 5: Build RAG documents
+    # -----------------------------
+    def scrape_roadmap(self, topic: str, limit: int = 5) -> List[Dict]:
+        documents = []
+        urls = self.discover_pages(topic, limit)
 
-            return "\n".join(content) if content else f"Guide for {career} career path."
+        for url in urls:
+            try:
+                html = self.fetch_page(url)
+                clean_text = self.clean_text(html)
 
-        except Exception as e:
-            print(f"Error scraping GeeksforGeeks: {e}")
-            return f"Technical guide for {career}."
+                if not self.is_roadmap_content(clean_text):
+                    continue
 
-    def scrape_freecodecamp(self, career: str) -> str:
-        """Scrape FreeCodeCamp for resources and learning paths"""
-        try:
-            url = f"https://www.freecodecamp.org/news/search/?query={career.replace(' ', '%20')}"
-            response = requests.get(url, headers=self.headers, timeout=settings["REQUEST_TIMEOUT"])
-            response.raise_for_status()
-
-            soup = BeautifulSoup(response.content, "html.parser")
-            content = []
-
-            for article in soup.find_all("article", limit=5):
-                title = article.find("h2")
-                desc = article.find("p")
-
-                if title:
-                    content.append(f"## {title.get_text(strip=True)}")
-                if desc:
-                    content.append(desc.get_text(strip=True))
-
-            return "\n".join(content) if content else f"Learning resources for {career}."
-
-        except Exception as e:
-            print(f"Error scraping FreeCodeCamp: {e}")
-            return f"Educational content for {career}."
-
-    def search_youtube_videos(self, query: str, max_results: int = 3) -> List[Dict]:
-        """Search YouTube for tutorials related to the given career"""
-        try:
-            results = self.youtube.search().list(
-                q=query,
-                part="id,snippet",
-                maxResults=max_results,
-                type="video",
-                order="relevance",
-                videoDuration="medium",  # 4–20 minutes
-            ).execute()
-
-            videos = []
-            for item in results.get("items", []):
-                vid = item["id"]["videoId"]
-                snip = item["snippet"]
-                videos.append({
-                    "title": snip["title"],
-                    "url": f"https://www.youtube.com/watch?v={vid}",
-                    "channel": snip["channelTitle"],
-                    "description": snip["description"][:200],
+                documents.append({
+                    "content": clean_text,
+                    "metadata": {
+                        "source": url,
+                        "topic": topic,
+                        "type": "roadmap"
+                    }
                 })
 
-            return videos
+            except Exception as e:
+                print(f"Failed to process {url}: {e}")
 
-        except Exception as e:
-            print(f"Error searching YouTube: {e}")
-            return []
+        return documents
 
-    def scrape_all_sources(self, career: str) -> Dict[str, str]:
-        """Scrape all major platforms and return a combined dictionary"""
-        print(f"🔍 Collecting data for: {career}")
 
-        data = {
-            "career": career,
-            "roadmap_sh": self.scrape_roadmap_sh(career),
-            "geeksforgeeks": self.scrape_geeksforgeeks(career),
-            "freecodecamp": self.scrape_freecodecamp(career),
-            "youtube_videos": self.search_youtube_videos(f"{career} tutorial roadmap"),
-        }
+# ================= TEST RUN =================
 
-        time.sleep(1)
-        return data
+if __name__ == "__main__":
+    scraper = RoadmapScraper()
+    docs = scraper.scrape_roadmap("machine learning", limit=3)
 
-    def save_scraped_data(self, career: str, data: Dict) -> str:
-        """Save all scraped content into a text file"""
-        Path(settings["RAW_DATA_PATH"]).mkdir(parents=True, exist_ok=True)
-        filename = f"{career.replace(' ', '_').lower()}_data.txt"
-        filepath = os.path.join(settings["RAW_DATA_PATH"], filename)
+    print(f"\nRoadmap documents collected: {len(docs)}\n")
 
-        combined_text = f"""
-# Career: {data['career']}
-
-## Roadmap.sh Content:
-{data['roadmap_sh']}
-
-## GeeksforGeeks Content:
-{data['geeksforgeeks']}
-
-## FreeCodeCamp Content:
-{data['freecodecamp']}
-
-## YouTube Video References:
-"""
-        for v in data["youtube_videos"]:
-            combined_text += f"\n- {v['title']} by {v['channel']}\n  URL: {v['url']}\n"
-
-        with open(filepath, "w", encoding="utf-8") as f:
-            f.write(combined_text)
-
-        print(f"✅ Data saved at: {filepath}")
-        return filepath
+    for i, d in enumerate(docs, start=1):
+        print(f"Document {i}")
+        print("Source:", d["metadata"]["source"])
+        print("Content preview:")
+        print(d["content"][:500])
+        print("-" * 60)

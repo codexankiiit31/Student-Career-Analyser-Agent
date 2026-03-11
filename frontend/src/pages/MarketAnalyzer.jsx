@@ -1,272 +1,362 @@
+// MarketAnalyzer.jsx — Reads actual backend shape from CareerMarketOutput Pydantic model
+// Backend returns: { career, skills, declining_skills, career_growth, salary, summary_advice, sources, location, experience_level }
+
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
-import { Country, State, City } from "country-state-city";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search,
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Globe,
+  IndianRupee,
+  Briefcase,
+  Lightbulb,
+  Wrench,
+  Star,
+  AlertCircle,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  Zap,
+  BarChart3,
+  Target,
+  BookOpen
+} from "lucide-react";
 import "../Styles/MarketAnalyzer.css";
-import marketAnalyzerImg from "../assests/market_analyze.jpg";
 
-const MarketAnalyzer = () => {
-  const [formData, setFormData] = useState({
-    jobTitle: "",
-    experience: "",
-    skills: "",
-    country: "",
-    state: "",
-    city: "",
-  });
+const API_URL = "http://localhost:8000/api/market_analysis";
 
-  const [result, setResult] = useState(null);
+/* ────────────────────────────────────────
+   SUBCOMPONENTS
+──────────────────────────────────────── */
+
+const SkillChip = ({ text, type = "core" }) => (
+  <span className={`ma-chip ma-chip--${type}`}>{text}</span>
+);
+
+const SectionCard = ({ icon: Icon, title, color = "#6366f1", children }) => (
+  <motion.div
+    className="ma-section-card"
+    initial={{ opacity: 0, y: 12 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.35 }}
+  >
+    <div className="ma-section-header" style={{ borderLeftColor: color }}>
+      <Icon size={18} color={color} />
+      <h3>{title}</h3>
+    </div>
+    <div className="ma-section-body">{children}</div>
+  </motion.div>
+);
+
+const DemandBadge = ({ level }) => {
+  const map = {
+    High: { cls: "high", label: "🔥 High Demand" },
+    Medium: { cls: "medium", label: "⚡ Medium Demand" },
+    Low: { cls: "low", label: "📉 Low Demand" },
+  };
+  const info = map[level] || { cls: "medium", label: level };
+  return <span className={`ma-demand-badge ma-demand--${info.cls}`}>{info.label}</span>;
+};
+
+const FutureBadge = ({ scope }) => {
+  const map = {
+    Strong: { cls: "strong", label: "📈 Strong Future" },
+    Stable: { cls: "stable", label: "➡️ Stable Future" },
+    Declining: { cls: "declining", label: "⚠️ Declining" },
+  };
+  const info = map[scope] || { cls: "stable", label: scope };
+  return <span className={`ma-future-badge ma-future--${info.cls}`}>{info.label}</span>;
+};
+
+const SourceItem = ({ url, index }) => {
+  const domain = (() => {
+    try { return new URL(url).hostname.replace("www.", ""); }
+    catch { return url; }
+  })();
+  return (
+    <a href={url} target="_blank" rel="noreferrer" className="ma-source-link">
+      <ExternalLink size={12} />
+      {domain}
+    </a>
+  );
+};
+
+/* ────────────────────────────────────────
+   MAIN COMPONENT
+──────────────────────────────────────── */
+
+export default function MarketAnalyzer() {
+  const [form, setForm] = useState({ role: "", location: "", experience_level: "entry" });
   const [loading, setLoading] = useState(false);
-  const [jobs, setJobs] = useState([]);
-  const [loadingJobs, setLoadingJobs] = useState(false);
+  const [data, setData] = useState(null);   // actual result.data from backend
+  const [error, setError] = useState(null);
+  const [showSources, setShowSources] = useState(false);
 
-  const countries = Country.getAllCountries();
-  const states = formData.country ? State.getStatesOfCountry(formData.country) : [];
-  const cities = formData.state ? City.getCitiesOfState(formData.country, formData.state) : [];
-
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.role.trim()) return;
+    setError(null);
     setLoading(true);
-    setResult(null);
-    setJobs([]);
+    setData(null);
+    setShowSources(false);
 
     try {
-      const response = await fetch("https://api.example.com/market-analyzer", {
+      const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          role: form.role.trim(),
+          location: form.location.trim() || null,
+          experience_level: form.experience_level,
+        }),
       });
-      const data = await response.json();
-      setResult(data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      setResult({ error: "Something went wrong. Please try again." });
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
+      const json = await res.json();
+
+      // Backend wraps result in { status, data }
+      const resultData = json?.data ?? json;
+      if (!resultData?.career) throw new Error("Invalid response from server");
+
+      setData(resultData);
+
+      // scroll to results
+      setTimeout(() => {
+        document.getElementById("ma-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 200);
+
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFetchJobs = async () => {
-    setLoadingJobs(true);
-    try {
-      const res = await fetch(
-        `https://api.example.com/jobs?title=${formData.jobTitle}&location=${formData.city}`
-      );
-      const jobData = await res.json();
-      setJobs(jobData.jobs || []);
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-      setJobs([{ title: "No jobs found", company: "", location: "" }]);
-    } finally {
-      setLoadingJobs(false);
-    }
-  };
+  // Derived from backend Pydantic CareerMarketOutput
+  const skills = data?.skills ?? {};
+  const careerGrowth = data?.career_growth ?? {};
+  const salary = data?.salary ?? {};
+  const decliningSkills = data?.declining_skills ?? [];
+  const sources = data?.sources ?? [];
 
   return (
-    <div className="market-analyzer-page">
-      {/* HERO SECTION */}
-      <section className="hero-section-market">
-        <img src={marketAnalyzerImg} alt="Market Analysis" className="hero-image" />
-        <div className="hero-gradient"></div>
-        <div className="hero-content">
-          <motion.h1
-            className="intro-title"
-            initial={{ y: -30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            Market Analyzer
-          </motion.h1>
-          <motion.p
-            className="intro-text"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-          >
-            Gain insights into job trends, skill demand, and salary expectations.
-            Enter your details and let AI analyze the career market for you.
-          </motion.p>
-        </div>
-      </section>
+    <div className="ma-page">
 
-      {/* FORM SECTION */}
-      <section className="form-section">
-        <motion.form
-          onSubmit={handleSubmit}
-          className="analyzer-form"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2 className="form-heading">Fill Required Details</h2>
-
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Job Title</label>
-              <input
-                type="text"
-                name="jobTitle"
-                placeholder="e.g., Software Developer"
-                value={formData.jobTitle}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Experience (Years)</label>
-              <input
-                type="number"
-                name="experience"
-                placeholder="e.g., 3"
-                value={formData.experience}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group full-width">
-              <label>Key Skills</label>
-              <input
-                type="text"
-                name="skills"
-                placeholder="e.g., React, Node.js, AI"
-                value={formData.skills}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Country</label>
-              <select
-                name="country"
-                value={formData.country}
-                onChange={(e) =>
-                  setFormData({ ...formData, country: e.target.value, state: "", city: "" })
-                }
-                required
-              >
-                <option value="">Select Country</option>
-                {countries.map((country) => (
-                  <option key={country.isoCode} value={country.isoCode}>
-                    {country.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>State</label>
-              <select
-                name="state"
-                value={formData.state}
-                onChange={(e) =>
-                  setFormData({ ...formData, state: e.target.value, city: "" })
-                }
-                required
-                disabled={!formData.country}
-              >
-                <option value="">Select State</option>
-                {states.map((state) => (
-                  <option key={state.isoCode} value={state.isoCode}>
-                    {state.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group full-width">
-              <label>City</label>
-              <select
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                required
-                disabled={!formData.state}
-              >
-                <option value="">Select City</option>
-                {cities.map((city) => (
-                  <option key={city.name} value={city.name}>
-                    {city.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="btn-container">
-            <button type="submit" disabled={loading} className="execute-btn">
-              {loading ? (
-                <>
-                  <Loader2 className="spin-icon" /> Executing...
-                </>
-              ) : (
-                "Execute"
-              )}
-            </button>
-          </div>
-        </motion.form>
-      </section>
-
-      {/* RESULT SECTION */}
-      <section className="result-section">
+      {/* ─── HERO ──────────────────────────────── */}
+      <div className="ma-hero">
         <motion.div
-          className="result-box"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
+          className="ma-hero-inner"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
         >
-          <h2 className="result-heading">Show Your Result</h2>
+          <div className="ma-hero-text">
+            <h1><BarChart3 size={28} /> AI Market Intelligence</h1>
+            <p>Search any career role and get live market analysis — skills, salary, demand, and future scope.</p>
+          </div>
 
-          {loading && <p className="loading-text">Analyzing your data...</p>}
+          <form className="ma-search-form" onSubmit={handleSubmit}>
+            <div className="ma-search-row">
+              <div className="ma-field">
+                <label>Job Role *</label>
+                <input
+                  name="role"
+                  value={form.role}
+                  onChange={handleChange}
+                  placeholder="e.g. Data Scientist, Full Stack Developer"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="ma-field ma-field--sm">
+                <label>Location</label>
+                <input
+                  name="location"
+                  value={form.location}
+                  onChange={handleChange}
+                  placeholder="e.g. Bangalore (optional)"
+                />
+              </div>
+              <div className="ma-field ma-field--xs">
+                <label>Experience</label>
+                <select name="experience_level" value={form.experience_level} onChange={handleChange}>
+                  <option value="entry">Entry</option>
+                  <option value="mid">Mid</option>
+                  <option value="senior">Senior</option>
+                </select>
+              </div>
+              <button className="ma-search-btn" type="submit" disabled={loading}>
+                {loading ? <Loader2 size={18} className="ma-spin" /> : <Search size={18} />}
+                {loading ? "Analyzing..." : "Analyze"}
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </div>
 
-          {!loading && result && (
-            <div className="result-content">
-              {result.error ? (
-                <p className="error-text">{result.error}</p>
-              ) : (
-                <>
-                  <p><strong>Job Demand:</strong> {result.jobDemand || "High demand in your area"}</p>
-                  <p><strong>Average Salary:</strong> {result.salaryRange || "₹6–12 LPA"}</p>
-                  <p><strong>Top Skills Required:</strong> {result.topSkills?.join(", ") || formData.skills}</p>
-                  <p><strong>Location Insights:</strong> {result.locationInsights || `Opportunities in ${formData.city}`}</p>
-                  <p className="recommendation">
-                    Recommendation: {result.recommendation || "Upskill in AI tools for better growth."}
-                  </p>
+      {/* ─── RESULTS ───────────────────────────── */}
+      <div id="ma-results" className="ma-results-area">
 
-                  <div className="current-job-container">
-                    <button
-                      onClick={handleFetchJobs}
-                      disabled={loadingJobs}
-                      className="current-job-btn"
-                    >
-                      {loadingJobs ? "Loading Jobs..." : "Show Current Jobs"}
-                    </button>
+        {/* Loading */}
+        {loading && (
+          <div className="ma-loading-box">
+            <Loader2 size={36} className="ma-spin" />
+            <p>Scraping live market data & running AI analysis…</p>
+            <span className="ma-loading-note">This may take 15–30 seconds</span>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="ma-error-box">
+            <AlertCircle size={20} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Placeholder */}
+        {!loading && !data && !error && (
+          <div className="ma-placeholder">
+            <Target size={48} />
+            <h3>Enter a job role above to get started</h3>
+            <p>We'll scrape real-time market data and generate a complete career intelligence report.</p>
+          </div>
+        )}
+
+        {/* ─── DASHBOARD ─────────────────────── */}
+        <AnimatePresence>
+          {data && !loading && (
+            <motion.div
+              key="dashboard"
+              className="ma-dashboard"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              {/* Role Title Bar */}
+              <div className="ma-role-bar">
+                <div className="ma-role-info">
+                  <h2>{data.career}</h2>
+                  {data.location && <span className="ma-role-tag">📍 {data.location}</span>}
+                  <span className="ma-role-tag">👤 {data.experience_level} level</span>
+                </div>
+                <div className="ma-role-badges">
+                  {careerGrowth.current_demand && <DemandBadge level={careerGrowth.current_demand} />}
+                  {careerGrowth.future_scope && <FutureBadge scope={careerGrowth.future_scope} />}
+                </div>
+              </div>
+
+              {/* ─── SALARY CARDS ─── */}
+              <div className="ma-salary-row">
+                <div className="ma-salary-card ma-salary-card--india">
+                  <div className="ma-salary-icon"><IndianRupee size={22} /></div>
+                  <div>
+                    <p className="ma-salary-label">India Salary</p>
+                    <p className="ma-salary-range">{salary?.india?.average_range || "N/A"}</p>
+                    <p className="ma-salary-desc">{salary?.india?.description || ""}</p>
                   </div>
+                </div>
+                <div className="ma-salary-card ma-salary-card--global">
+                  <div className="ma-salary-icon"><Globe size={22} /></div>
+                  <div>
+                    <p className="ma-salary-label">Global Salary</p>
+                    <p className="ma-salary-range">{salary?.abroad?.average_range || "N/A"}</p>
+                    <p className="ma-salary-desc">{salary?.abroad?.description || ""}</p>
+                  </div>
+                </div>
+                <div className="ma-salary-card ma-salary-card--summary">
+                  <div className="ma-salary-icon"><DollarSign size={22} /></div>
+                  <div>
+                    <p className="ma-salary-label">Earning Potential</p>
+                    <p className="ma-salary-summary">{salary?.salary_summary || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
 
-                  {jobs.length > 0 && (
-                    <div className="job-list">
-                      <h3 className="job-list-heading">Current Job Openings</h3>
-                      <ul>
-                        {jobs.map((job, index) => (
-                          <li key={index} className="job-item">
-                            <strong>{job.title}</strong> — {job.company} ({job.location})
-                          </li>
-                        ))}
-                      </ul>
+              {/* ─── SKILLS ROW ─── */}
+              <div className="ma-skills-grid">
+
+                <SectionCard icon={Star} title="Core Skills" color="#10b981">
+                  <div className="ma-chips">
+                    {(skills.core || []).length === 0 && <p className="ma-no-data">No data</p>}
+                    {(skills.core || []).map((s, i) => <SkillChip key={i} text={s} type="core" />)}
+                  </div>
+                </SectionCard>
+
+                <SectionCard icon={Wrench} title="Tools & Technologies" color="#6366f1">
+                  <div className="ma-chips">
+                    {(skills.tools || []).length === 0 && <p className="ma-no-data">No data</p>}
+                    {(skills.tools || []).map((s, i) => <SkillChip key={i} text={s} type="tools" />)}
+                  </div>
+                </SectionCard>
+
+                <SectionCard icon={Lightbulb} title="Nice to Have" color="#f59e0b">
+                  <div className="ma-chips">
+                    {(skills.nice_to_have || []).length === 0 && <p className="ma-no-data">No data</p>}
+                    {(skills.nice_to_have || []).map((s, i) => <SkillChip key={i} text={s} type="nice" />)}
+                  </div>
+                </SectionCard>
+
+                <SectionCard icon={TrendingDown} title="Declining Skills" color="#ef4444">
+                  <div className="ma-chips">
+                    {decliningSkills.length === 0 && <p className="ma-no-data">No data</p>}
+                    {decliningSkills.map((s, i) => <SkillChip key={i} text={s} type="declining" />)}
+                  </div>
+                </SectionCard>
+
+              </div>
+
+              {/* ─── CAREER GROWTH ─── */}
+              <div className="ma-growth-grid">
+                <SectionCard icon={TrendingUp} title="Current Market Demand" color="#10b981">
+                  {careerGrowth.current_demand && <DemandBadge level={careerGrowth.current_demand} />}
+                  <p className="ma-growth-text">{careerGrowth.demand_summary || "—"}</p>
+                </SectionCard>
+
+                <SectionCard icon={Zap} title="Future Scope" color="#8b5cf6">
+                  {careerGrowth.future_scope && <FutureBadge scope={careerGrowth.future_scope} />}
+                  <p className="ma-growth-text">{careerGrowth.future_summary || "—"}</p>
+                </SectionCard>
+              </div>
+
+              {/* ─── ADVICE ─── */}
+              {data.summary_advice && (
+                <SectionCard icon={BookOpen} title="Career Advice for Students" color="#f59e0b">
+                  <p className="ma-advice-text">{data.summary_advice}</p>
+                </SectionCard>
+              )}
+
+              {/* ─── SOURCES ─── */}
+              {sources.length > 0 && (
+                <div className="ma-sources-section">
+                  <button
+                    className="ma-sources-toggle"
+                    onClick={() => setShowSources(v => !v)}
+                  >
+                    <ExternalLink size={15} />
+                    {showSources ? "Hide" : "Show"} {sources.length} sources used
+                    {showSources ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  {showSources && (
+                    <div className="ma-sources-list">
+                      {sources.map((url, i) => <SourceItem key={i} url={url} index={i} />)}
                     </div>
                   )}
-                </>
+                </div>
               )}
-            </div>
+
+            </motion.div>
           )}
-        </motion.div>
-      </section>
+        </AnimatePresence>
+      </div>
     </div>
   );
-};
-
-export default MarketAnalyzer;
+}

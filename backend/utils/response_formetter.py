@@ -19,7 +19,7 @@ def extract_and_clean_text(file: UploadFile) -> str:
         
     Returns:
         Cleaned text content
-        
+        -
     Raises:
         ValueError: If file format is unsupported
     """

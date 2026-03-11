@@ -1,251 +1,304 @@
 import json
+import logging
 from pathlib import Path
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.output_parsers import StrOutputParser
+from typing import List, Optional, Dict, Any
+
+from pydantic import BaseModel, Field
+from tenacity import retry, stop_after_attempt, wait_fixed, before_sleep_log
+
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.runnables import RunnableParallel, RunnableLambda
+
 from utils.llm_utils import get_llm
 
 
+# -------------------------------------------------
+# Logging Setup
+# -------------------------------------------------
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+# =================================================
+# STRICT PYDANTIC OUTPUT SCHEMAS
+# =================================================
+
+# ----------- Resume & Job (Stage 1) -----------
+
+class ResumeAnalysis(BaseModel):
+    technical_skills: List[str]
+    soft_skills: List[str]
+    years_experience: str
+    education: List[Dict[str, str]]
+    key_achievements: List[str]
+    core_competencies: List[str]
+    industry_experience: List[str]
+    leadership_experience: List[str]
+    technologies_used: List[str]
+    projects: List[str]
+
+
+class JobAnalysis(BaseModel):
+    technical_skills: List[str]
+    soft_skills: List[str]
+    years_experience: str
+    education_requirements: List[str]
+    key_responsibilities: List[str]
+    company_culture: str
+    certifications: List[str]
+    industry_type: str
+    job_level: str
+    key_technologies: List[str]
+
+
+# ----------- Unified Output (Stage 2) -----------
+
+class MatchSummary(BaseModel):
+    overall_match_percentage: int = Field(ge=0, le=100)
+    ats_score: int = Field(ge=0, le=100)
+    selection_probability: int = Field(ge=0, le=100)
+
+
+class SkillItem(BaseModel):
+    skill_name: str
+    proficiency_level: str
+    evidence: List[str]
+
+
+class MissingSkill(BaseModel):
+    skill_name: str
+    priority: str  # High / Medium / Low
+    suggestion: str
+
+
+class SkillsGapAnalysis(BaseModel):
+    technical_skills: str
+    soft_skills: str
+
+
+class MatchAnalysis(BaseModel):
+    matching_skills: List[SkillItem]
+    missing_skills: List[MissingSkill]
+    skills_gap_analysis: SkillsGapAnalysis
+    experience_match_analysis: str
+    education_match_analysis: str
+    key_strengths: List[str]
+    areas_of_improvement: List[str]
+
+
+class MissingKeywords(BaseModel):
+    technical_skills: List[str]
+    soft_skills: List[str]
+    tools_technologies: List[str]
+    certifications: List[str]
+
+
+class KeywordDensity(BaseModel):
+    keyword: str
+    current_frequency: int
+    recommended_frequency: int
+    suggestion: str
+
+
+class FormattingRec(BaseModel):
+    issue: str
+    section: str
+    suggestion: str
+    priority: str  # High / Medium / Low
+
+
+class SectionOrg(BaseModel):
+    current: str
+    recommended: str
+    reason: str
+
+
+class ATSOptimization(BaseModel):
+    ats_score: int = Field(ge=0, le=100)
+    missing_keywords: MissingKeywords
+    keyword_density_issues: List[KeywordDensity]
+    formatting_recommendations: List[FormattingRec]
+    section_organization: List[SectionOrg]
+
+
+class UnifiedAnalysis(BaseModel):
+    summary: MatchSummary
+    match_analysis: MatchAnalysis
+    ats_optimization: ATSOptimization
+
+
+# ----------- Cover Letter -----------
+
+class CoverLetter(BaseModel):
+    cover_letter: str
+    word_count: int
+    opening_hook: str
+    call_to_action: str
+    key_highlights: List[str]
+
+
+# =================================================
+# CAREER AGENT
+# =================================================
+
 class CareerAgent:
-    """AI Career Agent for resume analysis and optimization with agentic capabilities."""
-    
+    """
+    Unified AI Career Agent — LCEL based, strict Pydantic schemas, retry-safe.
+    """
+
+    RESUME_MAX_CHARS = 4000
+    JOB_MAX_CHARS = 3000
+
     def __init__(self):
-        """Initialize the career agent with LLM."""
         self.llm = get_llm()
-        self.output_parser = StrOutputParser()
-        self.prompts_dir = Path(__file__).resolve().parent.parent / "prompts"
-        print("✅ CareerAgent initialized successfully")
-    
-    def _load_prompt(self, file_name: str) -> str:
-        """
-        Load prompt template from file.
-        
-        Args:
-            file_name: Name of the prompt file
-            
-        Returns:
-            Prompt template string
-        """
-        # prompt_path = self.prompts_dir / file_name
-        prompt_path = self.prompts_dir / "job_anaylzer" / file_name
-        
-        if not prompt_path.exists():
-            raise FileNotFoundError(f"Prompt file not found: {prompt_path}")
-        
-        with open(prompt_path, "r", encoding="utf-8") as f:
-            return f.read()
-    
-    def _clean_json_response(self, response_text: str) -> str:
-        """
-        Clean and prepare JSON response for parsing.
-        
-        Args:
-            response_text: Raw LLM response
-            
-        Returns:
-            Cleaned JSON string
-        """
-        # Strip whitespace and quotes
-        response_text = response_text.strip().strip('"\'')
-        
-        # Remove markdown code blocks
-        if response_text.startswith('```json'):
-            response_text = response_text.replace('```json', '').replace('```', '').strip()
-        elif response_text.startswith('```'):
-            response_text = response_text.replace('```', '').strip()
-        
-        return response_text
-    
-    def _analyze_job_description(self, job_description: str) -> dict:
-        """
-        Deep analysis of job description using agentic approach.
-        
-        Args:
-            job_description: Job description text
-            
-        Returns:
-            Structured job analysis
-        """
-        prompt_template = self._load_prompt("job_analysis_prompt.txt")
+        self.prompts_dir = (
+            Path(__file__).resolve().parent.parent / "prompts" / "job_anaylzer"
+        )
+        self._prompt_cache: dict[str, str] = {}
+        logger.info("CareerAgent initialized")
 
-        try:
-            response = self.llm.invoke(prompt_template.format(description=job_description[:3000]))
-            response_text = response.content if hasattr(response, 'content') else str(response)
-            
-            print(f"📥 Job analysis response received: {response_text[:200]}...")
-            
-            response_text = self._clean_json_response(response_text)
-            parsed_response = json.loads(response_text)
-            
-            print("✅ Job description analysis successful!")
-            return parsed_response
-            
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON parsing error in job analysis: {e}")
-            print(f"Debug - Response: {response_text[:500]}")
-            return {}
-        except Exception as e:
-            print(f"❌ Error analyzing job description: {str(e)}")
-            return {}
-    
-    def _analyze_resume_content(self, resume_text: str) -> dict:
-        """
-        Deep analysis of resume using agentic approach.
-        
-        Args:
-            resume_text: Resume content
-            
-        Returns:
-            Structured resume analysis
-        """
-        prompt_template = self._load_prompt("resume_analysis_prompt.txt")
+    # ----------------------------------------------
+    # Utilities
+    # ----------------------------------------------
+    def _load_prompt(self, name: str) -> str:
+        if name in self._prompt_cache:
+            return self._prompt_cache[name]
+        file = self.prompts_dir / name
+        if not file.exists():
+            raise FileNotFoundError(f"Prompt not found: {file}")
+        text = file.read_text(encoding="utf-8")
+        self._prompt_cache[name] = text
+        return text
 
-        try:
-            response = self.llm.invoke(prompt_template.format(resume=resume_text[:4000]))
-            response_text = response.content if hasattr(response, 'content') else str(response)
-            
-            print(f"📥 Resume analysis response received: {response_text[:200]}...")
-            
-            response_text = self._clean_json_response(response_text)
-            parsed_response = json.loads(response_text)
-            
-            print("✅ Resume analysis successful!")
-            return parsed_response
-            
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON parsing error in resume analysis: {e}")
-            print(f"Debug - Response: {response_text[:500]}")
-            return {}
-        except Exception as e:
-            print(f"❌ Error analyzing resume: {str(e)}")
-            return {}
-    
-    def match_resume_job(self, resume_text: str, job_description: str, sim_score: float) -> dict:
-        """
-        Analyze resume-job match using agentic multi-step approach.
-        
-        Args:
-            resume_text: Extracted resume text
-            job_description: Job description text
-            sim_score: Similarity score from embeddings
-            
-        Returns:
-            Detailed matching analysis with structured data
-        """
-        print("🔍 Starting agentic match analysis...")
-        
-        # Step 1: Analyze job description
-        job_analysis = self._analyze_job_description(job_description)
-        if not job_analysis:
-            return {"error": "Failed to analyze job description"}
-        
-        # Step 2: Analyze resume
-        resume_analysis = self._analyze_resume_content(resume_text)
-        if not resume_analysis:
-            return {"error": "Failed to analyze resume"}
-        
-        # Step 3: Perform detailed matching
-        prompt_template = self._load_prompt("match_analysis_prompt.txt")
+    def _truncate(self, text: str, limit: int, label: str) -> str:
+        if not text or not text.strip():
+            raise ValueError(f"{label} cannot be empty")
+        text = text.strip()
+        if len(text) > limit:
+            logger.warning(f"{label} truncated to {limit} characters")
+        return text[:limit]
 
-        try:
-            response = self.llm.invoke(prompt_template.format(
-                job=json.dumps(job_analysis, indent=2)[:2000],
-                resume=json.dumps(resume_analysis, indent=2)[:2000],
-                similarity=sim_score
-            ))
-            response_text = response.content if hasattr(response, 'content') else str(response)
-            
-            print(f"📥 Match analysis response received: {response_text[:200]}...")
-            
-            response_text = self._clean_json_response(response_text)
-            match_result = json.loads(response_text)
-            
-            # Add metadata
-            match_result['job_analysis'] = job_analysis
-            match_result['resume_analysis'] = resume_analysis
-            
-            print(f"✅ Match analysis complete! Score: {match_result.get('overall_match_percentage', 'Unknown')}")
-            return match_result
-            
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON parsing error in match analysis: {e}")
-            print(f"Debug - Response: {response_text[:500]}")
-            return {"error": "Failed to parse match analysis"}
-        except Exception as e:
-            print(f"❌ Error in match analysis: {str(e)}")
-            return {"error": str(e)}
-    
-    def ats_optimization(self, resume_text: str, job_description: str) -> dict:
-        """
-        Provide comprehensive ATS optimization with structured recommendations.
-        
-        Args:
-            resume_text: Extracted resume text
-            job_description: Job description text
-            
-        Returns:
-            Structured ATS optimization recommendations
-        """
-        print("🔍 Starting ATS optimization analysis...")
-        
-        prompt_template = self._load_prompt("ats_optimization_prompt.txt")
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_fixed(2),
+        before_sleep=before_sleep_log(logger, logging.WARNING)
+    )
+    def _invoke(self, chain, payload: dict):
+        return chain.invoke(payload)
 
-        try:
-            response = self.llm.invoke(prompt_template.format(
-                resume=resume_text[:4000],
-                job=job_description[:2000]
-            ))
-            response_text = response.content if hasattr(response, 'content') else str(response)
-            
-            print(f"📥 ATS optimization response received: {response_text[:200]}...")
-            
-            response_text = self._clean_json_response(response_text)
-            ats_result = json.loads(response_text)
-            
-            print(f"✅ ATS optimization complete! Score: {ats_result.get('ats_score', 'Unknown')}")
-            return ats_result
-            
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON parsing error in ATS optimization: {e}")
-            print(f"Debug - Response: {response_text[:500]}")
-            return {"error": "Failed to parse ATS optimization"}
-        except Exception as e:
-            print(f"❌ Error in ATS optimization: {str(e)}")
-            return {"error": str(e)}
-    
-    def generate_cover_letter(self, resume_text: str, job_description: str) -> dict:
-        """
-        Generate a professional, tailored cover letter with metadata.
-        
-        Args:
-            resume_text: Extracted resume text
-            job_description: Job description text
-            
-        Returns:
-            Generated cover letter with metadata
-        """
-        print("🔍 Generating cover letter...")
-        
-        prompt_template = self._load_prompt("cover_letter_generation_prompt.txt")
+    # ----------------------------------------------
+    # Stage 1: Parallel Resume + Job Extraction
+    # (used internally to feed Stage 2)
+    # ----------------------------------------------
+    def _analyze_resume_and_job(self, resume: str, job: str) -> dict:
+        logger.info("Stage 1: Parallel resume & job extraction")
 
-        try:
-            response = self.llm.invoke(prompt_template.format(
-                resume=resume_text[:4000],
-                job=job_description[:2000]
-            ))
-            response_text = response.content if hasattr(response, 'content') else str(response)
-            
-            print(f"📥 Cover letter response received: {response_text[:200]}...")
-            
-            response_text = self._clean_json_response(response_text)
-            letter_result = json.loads(response_text)
-            
-            print(f"✅ Cover letter generated! Word count: {letter_result.get('word_count', 'Unknown')}")
-            return letter_result
-            
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON parsing error in cover letter generation: {e}")
-            print(f"Debug - Response: {response_text[:500]}")
-            return {"error": "Failed to parse cover letter"}
-        except Exception as e:
-            print(f"❌ Error generating cover letter: {str(e)}")
-            return {"error": str(e)}
+        resume_clean = self._truncate(resume, self.RESUME_MAX_CHARS, "Resume")
+        job_clean = self._truncate(job, self.JOB_MAX_CHARS, "Job Description")
+
+        resume_parser = PydanticOutputParser(pydantic_object=ResumeAnalysis)
+        job_parser = PydanticOutputParser(pydantic_object=JobAnalysis)
+
+        resume_prompt = PromptTemplate.from_template(
+            self._load_prompt("resume_analysis_prompt.txt")
+        ).partial(format_instructions=resume_parser.get_format_instructions())
+
+        job_prompt = PromptTemplate.from_template(
+            self._load_prompt("job_analysis_prompt.txt")
+        ).partial(format_instructions=job_parser.get_format_instructions())
+
+        parallel_chain = RunnableParallel({
+            "resume": (
+                RunnableLambda(lambda x: {"resume": x["resume"]})
+                | resume_prompt
+                | self.llm
+                | resume_parser
+            ),
+            "job": (
+                RunnableLambda(lambda x: {"description": x["description"]})
+                | job_prompt
+                | self.llm
+                | job_parser
+            )
+        })
+
+        return self._invoke(
+            parallel_chain,
+            {"resume": resume_clean, "description": job_clean}
+        )
+
+    # ----------------------------------------------
+    # Stage 2: Unified ATS + Match Analysis
+    # ----------------------------------------------
+    def unified_analysis(self, resume: str, job: str) -> dict:
+        logger.info("Stage 2: Unified ATS + match analysis")
+
+        resume_clean = self._truncate(resume, self.RESUME_MAX_CHARS, "Resume")
+        job_clean = self._truncate(job, self.JOB_MAX_CHARS, "Job Description")
+
+        unified_parser = PydanticOutputParser(pydantic_object=UnifiedAnalysis)
+
+        unified_prompt = PromptTemplate.from_template(
+            self._load_prompt("unified_prompt.txt")
+        ).partial(format_instructions=unified_parser.get_format_instructions())
+
+        chain = unified_prompt | self.llm | unified_parser
+
+        output: UnifiedAnalysis = self._invoke(
+            chain,
+            {
+                "resume": resume_clean,
+                "job": job_clean,
+            }
+        )
+
+        return {
+            "analysis": output.model_dump(),
+            "resume_analysis": {},
+            "job_analysis": {}
+        }
+
+    # ----------------------------------------------
+    # Backward Compatibility
+    # ----------------------------------------------
+    def analyze_resume_job(
+        self,
+        resume: str,
+        job: str,
+        similarity: Optional[float] = None
+    ) -> dict:
+        """Legacy method — routes to unified_analysis()."""
+        return self.unified_analysis(resume, job)
+
+    # ----------------------------------------------
+    # Cover Letter Generation
+    # ----------------------------------------------
+    def generate_cover_letter(self, resume: str, job: str) -> dict:
+        logger.info("Generating cover letter")
+
+        resume_clean = self._truncate(resume, self.RESUME_MAX_CHARS, "Resume")
+        job_clean = self._truncate(job, self.JOB_MAX_CHARS, "Job Description")
+
+        parser = PydanticOutputParser(pydantic_object=CoverLetter)
+
+        prompt = PromptTemplate.from_template(
+            self._load_prompt("cover_letter_generation_prompt.txt")
+        ).partial(format_instructions=parser.get_format_instructions())
+
+        chain = prompt | self.llm | parser
+
+        result: CoverLetter = self._invoke(
+            chain,
+            {"resume": resume_clean, "job": job_clean}
+        )
+
+        return result.model_dump()
+
+
+# -------------------------------------------------
+# Local Test Entry
+# -------------------------------------------------
+if __name__ == "__main__":
+    agent = CareerAgent()
+    print("CareerAgent ready")

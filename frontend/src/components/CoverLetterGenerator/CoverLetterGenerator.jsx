@@ -1,207 +1,115 @@
-import React, { useState } from 'react';
-import { Mail, Download, Copy, Check, Eye, FileText, Sparkles } from 'lucide-react';
-import { toast } from 'react-toastify';
-import './CoverLetterGenerator.css';
+// CoverLetterGenerator.jsx
+import React, { useState } from "react";
+import { Copy, Download, Printer, Check } from "lucide-react";
+import { toast } from "react-toastify";
+import "./CoverLetterGenerator.css";
 
 const CoverLetterGenerator = ({ data }) => {
   const [copied, setCopied] = useState(false);
 
-  const {
-    generated_letter,
-    word_count,
-    tone,
-    key_highlights = [],
-    customization_notes,
-    opening_hook,
-    call_to_action,
-    suggested_improvements = [],
-  } = data;
+  // Guard: require either generated_letter or a successful status
+  const letter = data?.generated_letter || data?.cover_letter || "";
+  const isReady = data && (data.status === "success" || letter.length > 10);
 
-  const handleCopy = () => {
-    if (generated_letter) {
-      navigator.clipboard.writeText(generated_letter);
+  if (!isReady) {
+    return (
+      <div className="clg-empty">
+        <p>No cover letter available. Generate one from the analysis tab.</p>
+      </div>
+    );
+  }
+
+  const { word_count = 0, tone = "" } = data;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(letter);
       setCopied(true);
-      toast.success('Cover letter copied to clipboard!');
+      toast.success("Cover letter copied");
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Copy failed");
     }
   };
 
   const handleDownload = () => {
-    if (generated_letter) {
-      const element = document.createElement('a');
-      const file = new Blob([generated_letter], { type: 'text/plain' });
-      element.href = URL.createObjectURL(file);
-      element.download = `cover_letter_${Date.now()}.txt`;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-      toast.success('Cover letter downloaded!');
+    try {
+      const el = document.createElement("a");
+      const file = new Blob([letter], { type: "text/plain" });
+      el.href = URL.createObjectURL(file);
+      el.download = `cover_letter_${Date.now()}.txt`;
+      document.body.appendChild(el);
+      el.click();
+      el.remove();
+      toast.success("Downloaded");
+    } catch {
+      toast.error("Download failed");
     }
   };
 
   const handlePrint = () => {
-    if (generated_letter) {
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Cover Letter</title>
-            <style>
-              body {
-                font-family: 'Times New Roman', Times, serif;
-                line-height: 1.8;
-                padding: 2rem;
-                max-width: 800px;
-                margin: 0 auto;
-              }
-              pre {
-                white-space: pre-wrap;
-                font-family: inherit;
-                font-size: 12pt;
-              }
-            </style>
-          </head>
-          <body>
-            <pre>${generated_letter}</pre>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
+    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!printWindow) {
+      toast.error("Unable to open print window");
+      return;
     }
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Cover Letter</title>
+          <style>
+            body { font-family: Georgia, 'Times New Roman', serif; padding: 2rem; color:#222; line-height:1.6; }
+            pre { white-space: pre-wrap; font-size: 14px; }
+          </style>
+        </head>
+        <body><pre>${escapeHtml(letter)}</pre></body>
+      </html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   return (
-    <div className="cover-letter-generator">
-      {/* Header with Actions */}
-      <div className="letter-header">
-        <div className="header-info">
-          <Mail size={32} />
-          <div>
-            <h2>Your Professional Cover Letter</h2>
-            <div className="letter-meta">
-              <span>📝 {word_count || 0} words</span>
-              {tone && <span>🎭 Tone: {tone}</span>}
-            </div>
+    <div className="clg-root">
+      <div className="clg-header">
+        <div className="clg-meta">
+          <div className="clg-title">Cover Letter</div>
+          <div className="clg-sub">
+            <span className="clg-count">📝 {word_count} words</span>
+            {tone && <span className="clg-tone">• Tone: {tone}</span>}
           </div>
         </div>
-        <div className="header-actions">
-          <button onClick={handleCopy} className="action-button copy">
-            {copied ? <Check size={20} /> : <Copy size={20} />}
-            {copied ? 'Copied!' : 'Copy'}
+
+        <div className="clg-actions">
+          <button className="clg-btn" onClick={handleCopy} aria-label="Copy">
+            {copied ? <><Check size={16} /> Copied</> : <><Copy size={16} /> Copy</>}
           </button>
-          <button onClick={handleDownload} className="action-button download">
-            <Download size={20} />
-            Download
+
+          <button className="clg-btn" onClick={handleDownload} aria-label="Download">
+            <Download size={16} /> Download
           </button>
-          <button onClick={handlePrint} className="action-button print">
-            <Eye size={20} />
-            Print
+
+          <button className="clg-btn" onClick={handlePrint} aria-label="Print">
+            <Printer size={16} /> Print
           </button>
         </div>
       </div>
 
-      {/* Cover Letter Content */}
-      <div className="letter-content-section">
-        <div className="letter-paper">
-          <pre className="letter-text">{generated_letter}</pre>
-        </div>
-      </div>
-
-      {/* Metadata Cards */}
-      <div className="metadata-section">
-        {/* Key Highlights */}
-        {key_highlights.length > 0 && (
-          <div className="metadata-card highlights">
-            <div className="metadata-header">
-              <Sparkles size={24} />
-              <h3>Key Highlights Included</h3>
-            </div>
-            <ul className="highlights-list">
-              {key_highlights.map((highlight, index) => (
-                <li key={index}>{highlight}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Customization Notes */}
-        {customization_notes && (
-          <div className="metadata-card customization">
-            <div className="metadata-header">
-              <FileText size={24} />
-              <h3>Customization Details</h3>
-            </div>
-            <p className="customization-text">{customization_notes}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Letter Structure Breakdown */}
-      {(opening_hook || call_to_action) && (
-        <div className="structure-section">
-          <h3 className="structure-title">Letter Structure Analysis</h3>
-          <div className="structure-grid">
-            {opening_hook && (
-              <div className="structure-card opening">
-                <h4>Opening Hook</h4>
-                <p>{opening_hook}</p>
-              </div>
-            )}
-            {call_to_action && (
-              <div className="structure-card closing">
-                <h4>Call to Action</h4>
-                <p>{call_to_action}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Suggested Improvements */}
-      {suggested_improvements.length > 0 && (
-        <div className="improvements-section">
-          <div className="improvements-header">
-            <Sparkles size={24} />
-            <h3>Optional Improvements</h3>
-          </div>
-          <ul className="improvements-list">
-            {suggested_improvements.map((improvement, index) => (
-              <li key={index}>{improvement}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Tips Section */}
-      <div className="tips-section">
-        <h3 className="tips-title">💡 Pro Tips for Using This Cover Letter</h3>
-        <div className="tips-grid">
-          <div className="tip-card">
-            <div className="tip-icon">1</div>
-            <div className="tip-content">
-              <h4>Personalize Further</h4>
-              <p>Add specific company details or recent news about the organization to show genuine interest.</p>
-            </div>
-          </div>
-          <div className="tip-card">
-            <div className="tip-icon">2</div>
-            <div className="tip-content">
-              <h4>Proofread Carefully</h4>
-              <p>Review for any errors and ensure contact information is accurate before sending.</p>
-            </div>
-          </div>
-          <div className="tip-card">
-            <div className="tip-icon">3</div>
-            <div className="tip-content">
-              <h4>Save as PDF</h4>
-              <p>When sending, convert to PDF to maintain formatting and professional appearance.</p>
-            </div>
-          </div>
-        </div>
+      <div className="clg-body">
+        <pre className="clg-letter" aria-label="Generated cover letter">
+          {letter}
+        </pre>
       </div>
     </div>
   );
 };
+
+// small helper to avoid breaking HTML when printing
+function escapeHtml(text = "") {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
 
 export default CoverLetterGenerator;

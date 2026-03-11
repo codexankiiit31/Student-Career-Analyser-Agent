@@ -1,344 +1,170 @@
-import React from 'react';
-import { 
-  Zap, AlertCircle, CheckCircle, FileText, TrendingUp, 
-  Target, Edit3, List
-} from 'lucide-react';
-import './ATSRecommendations.css';
+import React from "react";
+import {
+  Zap,
+  FileText,
+  ListChecks,
+  Layers,
+  Target,
+  AlertTriangle
+} from "lucide-react";
+import "./ATSRecommendations.css";
+
 
 const ATSRecommendations = ({ data }) => {
-  const {
-    ats_score,
-    missing_keywords = {},
-    keyword_density_issues = [],
-    formatting_recommendations = [],
-    section_organization = [],
-    optimized_professional_summary,
-    priority_action_items = [],
-    keyword_recommendations = {},
-    // content_suggestions = [], // Not used currently
-    improvement_potential,
-  } = data;
+  // JobAnalyzer passes { summary, ats_optimization } as atsData
+  // Support both old shape (data.analysis.ats_optimization) and new (data.ats_optimization)
+  const ats = data?.ats_optimization ?? data?.analysis?.ats_optimization;
 
-  const getScoreColor = (score) => {
-    if (!score) return '#718096';
-    const numScore = typeof score === 'string' ? parseFloat(score) : score;
-    if (numScore >= 80) return '#48bb78';
-    if (numScore >= 60) return '#4299e1';
-    if (numScore >= 40) return '#ed8936';
-    return '#f56565';
-  };
-
-  const atsScoreNum = ats_score ? parseFloat(ats_score) : 0;
-  const scoreColor = getScoreColor(atsScoreNum);
-
-  return (
-    <div className="ats-recommendations">
-      {/* ATS Score Overview */}
-      <div className="ats-score-card" style={{ borderColor: scoreColor }}>
-        <div className="score-section">
-          <div className="score-icon" style={{ background: scoreColor }}>
-            <Zap size={32} color="white" />
-          </div>
-          <div className="score-content">
-            <h2>ATS Compatibility Score</h2>
-            <div className="score-value" style={{ color: scoreColor }}>
-              {ats_score || 'N/A'}
-            </div>
-            {improvement_potential && (
-              <div className="improvement-info">
-                <TrendingUp size={16} />
-                <span>{improvement_potential}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="score-interpretation">
-          {atsScoreNum >= 80 && (
-            <p>✅ Excellent! Your resume is well-optimized for ATS systems.</p>
-          )}
-          {atsScoreNum >= 60 && atsScoreNum < 80 && (
-            <p>👍 Good progress! A few improvements will make it ATS-perfect.</p>
-          )}
-          {atsScoreNum >= 40 && atsScoreNum < 60 && (
-            <p>⚠️ Moderate ATS compatibility. Follow recommendations to improve.</p>
-          )}
-          {atsScoreNum < 40 && atsScoreNum > 0 && (
-            <p>🔧 Needs work. Your resume may not pass ATS filters effectively.</p>
-          )}
-        </div>
-      </div>
-
-      {/* Priority Action Items */}
-      {priority_action_items.length > 0 && (
-        <div className="priority-section">
-          <div className="section-header priority">
-            <Target size={24} />
-            <h3>Priority Action Items</h3>
-          </div>
-          <div className="priority-grid">
-            {priority_action_items.map((item, index) => (
-              <PriorityActionCard key={index} item={item} index={index} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Missing Keywords */}
-      {Object.keys(missing_keywords).length > 0 && (
-        <div className="keywords-section">
-          <div className="section-header keywords">
-            <FileText size={24} />
-            <h3>Missing Keywords</h3>
-          </div>
-          <div className="keywords-grid">
-            {Object.entries(missing_keywords).map(([category, keywords]) => (
-              <KeywordCategory 
-                key={category} 
-                category={category} 
-                keywords={keywords} 
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Keyword Density Issues */}
-      {keyword_density_issues.length > 0 && (
-        <div className="density-section">
-          <div className="section-header density">
-            <TrendingUp size={24} />
-            <h3>Keyword Density Optimization</h3>
-          </div>
-          <div className="density-list">
-            {keyword_density_issues.map((issue, index) => (
-              <DensityIssueCard key={index} issue={issue} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Optimized Professional Summary */}
-      {optimized_professional_summary && (
-        <div className="summary-section">
-          <div className="section-header summary">
-            <Edit3 size={24} />
-            <h3>Optimized Professional Summary</h3>
-          </div>
-          <div className="summary-content">
-            <p className="summary-note">
-              💡 <strong>Tip:</strong> Use this ATS-optimized summary to replace your current one:
-            </p>
-            <div className="summary-text">
-              {optimized_professional_summary}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Formatting Recommendations */}
-      {formatting_recommendations.length > 0 && (
-        <div className="formatting-section">
-          <div className="section-header formatting">
-            <List size={24} />
-            <h3>Formatting Recommendations</h3>
-          </div>
-          <div className="formatting-list">
-            {formatting_recommendations.map((rec, index) => (
-              <FormattingCard key={index} recommendation={rec} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Section Organization */}
-      {section_organization.length > 0 && (
-        <div className="organization-section">
-          <div className="section-header organization">
-            <CheckCircle size={24} />
-            <h3>Section Organization</h3>
-          </div>
-          <div className="organization-list">
-            {section_organization.map((org, index) => (
-              <OrganizationCard key={index} organization={org} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Keyword Recommendations */}
-      {Object.keys(keyword_recommendations).length > 0 && (
-        <div className="keyword-rec-section">
-          <div className="section-header keyword-rec">
-            <Target size={24} />
-            <h3>Keyword Strategy</h3>
-          </div>
-          <div className="keyword-rec-grid">
-            {Object.entries(keyword_recommendations).map(([type, keywords]) => (
-              <KeywordRecommendationCard 
-                key={type} 
-                type={type} 
-                keywords={keywords} 
-              />
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const PriorityActionCard = ({ item, index }) => {
-  if (typeof item === 'string') {
+  if (!ats) {
     return (
-      <div className="priority-card">
-        <div className="priority-number">{index + 1}</div>
-        <div className="priority-content">
-          <p>{item}</p>
-        </div>
+      <div className="ats-no-data">
+        <p>No ATS Optimization Data Available</p>
       </div>
     );
   }
 
-  const { action, details, impact, estimated_improvement } = item;
+  const atsScore = ats.ats_score ?? 0;
+
+  const scoreColor =
+    atsScore >= 80 ? "#10b981"
+      : atsScore >= 60 ? "#3b82f6"
+        : atsScore >= 40 ? "#f59e0b"
+          : "#ef4444";
 
   return (
-    <div className="priority-card">
-      <div className="priority-header">
-        <div className="priority-number">{index + 1}</div>
-        {impact && (
-          <span className={`impact-badge impact-${impact.toLowerCase()}`}>
-            {impact} Impact
-          </span>
-        )}
-      </div>
-      <div className="priority-content">
-        <h4>{action}</h4>
-        {details && <p>{details}</p>}
-        {estimated_improvement && (
-          <div className="improvement-badge">
-            <TrendingUp size={14} />
-            <span>+{estimated_improvement} improvement</span>
+    <div className="ats-wrapper">
+
+      {/* ================= ATS SCORE ================= */}
+      <div className="ats-card ats-score-card" style={{ borderColor: scoreColor }}>
+        <div className="ats-score-header">
+          <div className="ats-round-icon" style={{ background: scoreColor }}>
+            <Zap size={26} color="#fff" />
           </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const KeywordCategory = ({ category, keywords }) => {
-  if (!keywords || keywords.length === 0) return null;
-
-  return (
-    <div className="keyword-category">
-      <h4>{category.replace(/_/g, ' ').toUpperCase()}</h4>
-      <div className="keyword-tags">
-        {keywords.map((keyword, index) => (
-          <span key={index} className="keyword-tag">
-            {keyword}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const DensityIssueCard = ({ issue }) => {
-  if (typeof issue === 'string') {
-    return <div className="density-card"><p>{issue}</p></div>;
-  }
-
-  const { keyword, current_frequency, recommended_frequency, suggestion } = issue;
-
-  return (
-    <div className="density-card">
-      <div className="density-keyword">{keyword}</div>
-      <div className="density-comparison">
-        <span className="current">Current: {current_frequency}x</span>
-        <span className="arrow">→</span>
-        <span className="recommended">Recommended: {recommended_frequency}x</span>
-      </div>
-      {suggestion && <p className="density-suggestion">{suggestion}</p>}
-    </div>
-  );
-};
-
-const FormattingCard = ({ recommendation }) => {
-  if (typeof recommendation === 'string') {
-    return <div className="formatting-card"><p>{recommendation}</p></div>;
-  }
-
-  const { issue, section, suggestion, priority } = recommendation;
-
-  return (
-    <div className="formatting-card">
-      <div className="formatting-header">
-        <AlertCircle size={18} />
-        <strong>{issue}</strong>
-        {priority && (
-          <span className={`priority-badge priority-${priority.toLowerCase()}`}>
-            {priority}
-          </span>
-        )}
-      </div>
-      {section && <div className="formatting-section">Section: {section}</div>}
-      {suggestion && <p className="formatting-suggestion">✓ {suggestion}</p>}
-    </div>
-  );
-};
-
-const OrganizationCard = ({ organization }) => {
-  if (typeof organization === 'string') {
-    return <div className="organization-card"><p>{organization}</p></div>;
-  }
-
-  const { current, recommended, reason } = organization;
-
-  return (
-    <div className="organization-card">
-      <div className="org-comparison">
-        <div className="org-current">
-          <span className="org-label">Current:</span>
-          <span>{current}</span>
+          <div>
+            <h3>ATS Compatibility Score</h3>
+            <p className="ats-score" style={{ color: scoreColor }}>
+              {atsScore}%
+            </p>
+          </div>
         </div>
-        <div className="org-arrow">→</div>
-        <div className="org-recommended">
-          <span className="org-label">Recommended:</span>
-          <span>{recommended}</span>
-        </div>
+
+        <p className="ats-score-text">
+          {atsScore >= 80 && "Excellent ATS alignment."}
+          {atsScore >= 60 && atsScore < 80 && "Good fit. Minor improvements possible."}
+          {atsScore >= 40 && atsScore < 60 && "Moderate compatibility. Needs polishing."}
+          {atsScore < 40 && "Weak ATS optimization. Requires significant improvements."}
+        </p>
       </div>
-      {reason && <p className="org-reason">💡 {reason}</p>}
+
+      {/* ================= MISSING KEYWORDS ================= */}
+      {ats.missing_keywords && (
+        <Section title="Missing Keywords" icon={<FileText />}>
+          <div className="grid-3">
+            {Object.entries(ats.missing_keywords).map(([cat, items]) =>
+              items.length > 0 ? (
+                <CategoryBox key={cat} title={cat}>
+                  {items.map((kw, i) => (
+                    <span key={i} className="tag">{kw}</span>
+                  ))}
+                </CategoryBox>
+              ) : null
+            )}
+          </div>
+        </Section>
+      )}
+
+      {/* ================= FORMATTING RECOMMENDATIONS ================= */}
+      {ats.formatting_recommendations?.length > 0 && (
+        <Section title="Formatting Recommendations" icon={<ListChecks />}>
+          {ats.formatting_recommendations.map((rec, i) => (
+            <RecommendationCard
+              key={i}
+              issue={rec.issue}
+              section={rec.section}
+              suggestion={rec.suggestion}
+              priority={rec.priority}
+            />
+          ))}
+        </Section>
+      )}
+
+      {/* ================= SECTION ORGANIZATION ================= */}
+      {ats.section_organization?.length > 0 && (
+        <Section title="Section Organization" icon={<Layers />}>
+          {ats.section_organization.map((sec, i) => (
+            <div key={i} className="org-card">
+              <h4>Current</h4>
+              <p>{sec.current}</p>
+
+              <h4>Recommended</h4>
+              <p>{sec.recommended}</p>
+
+              <p className="reason">
+                <strong>Reason:</strong> {sec.reason}
+              </p>
+            </div>
+          ))}
+        </Section>
+      )}
+
+      {/* ================= KEYWORD DENSITY ISSUES ================= */}
+      {ats.keyword_density_issues?.length > 0 && (
+        <Section title="Keyword Density Issues" icon={<AlertTriangle />}>
+          {ats.keyword_density_issues.map((kd, i) => (
+            <DensityCard
+              key={i}
+              keyword={kd.keyword}
+              current={kd.current_frequency}
+              recommended={kd.recommended_frequency}
+              suggestion={kd.suggestion}
+            />
+          ))}
+        </Section>
+      )}
+
     </div>
   );
 };
 
-const KeywordRecommendationCard = ({ type, keywords }) => {
-  if (!keywords || keywords.length === 0) return null;
+/* ================= SUB COMPONENTS ================= */
 
-  const typeColors = {
-    must_have: '#f56565',
-    good_to_have: '#ed8936',
-    optional: '#4299e1',
-  };
-
-  return (
-    <div className="keyword-rec-card">
-      <h4 style={{ color: typeColors[type] || '#718096' }}>
-        {type.replace(/_/g, ' ').toUpperCase()}
-      </h4>
-      <div className="keyword-rec-tags">
-        {keywords.map((keyword, index) => (
-          <span 
-            key={index} 
-            className="keyword-rec-tag"
-            style={{ borderColor: typeColors[type] || '#718096' }}
-          >
-            {keyword}
-          </span>
-        ))}
-      </div>
+const Section = ({ title, icon, children }) => (
+  <div className="ats-card">
+    <div className="section-header">
+      {icon}
+      <h3>{title}</h3>
     </div>
-  );
-};
+    {children}
+  </div>
+);
+
+const CategoryBox = ({ title, children }) => (
+  <div className="category-box">
+    <h4>{title.replace(/_/g, " ").toUpperCase()}</h4>
+    <div className="tag-list">{children}</div>
+  </div>
+);
+
+const RecommendationCard = ({ issue, section, suggestion, priority }) => (
+  <div className="recommend-card">
+    <h4>{issue}</h4>
+    <p><strong>Section:</strong> {section}</p>
+    <p>{suggestion}</p>
+    {priority && (
+      <span className={`priority-badge ${priority.toLowerCase()}`}>
+        {priority}
+      </span>
+    )}
+  </div>
+);
+
+const DensityCard = ({ keyword, current, recommended, suggestion }) => (
+  <div className="density-card">
+    <h4>{keyword}</h4>
+    <p>Current: {current}</p>
+    <p>Recommended: {recommended}</p>
+    <p><strong>Suggestion:</strong> {suggestion}</p>
+  </div>
+);
 
 export default ATSRecommendations;

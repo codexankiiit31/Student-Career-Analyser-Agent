@@ -1,0 +1,97 @@
+You are a senior ATS engine, resume evaluator, and job-match scoring expert.
+Analyze the provided RESUME and JOB DESCRIPTION and generate a complete structured JSON evaluation.
+
+STRICT RULES:
+• Respond ONLY with a valid JSON object — no markdown fences, no comments, no extra text.
+• Do NOT invent skills, experience, or facts not found in the resume.
+• All percentages/scores must be integers (0–100), NOT strings.
+• Use empty arrays [] for lists with no data. Use empty string "" for text fields with no data.
+• All judgments must be evidence-based from the resume + job description.
+
+---
+
+JOB DESCRIPTION:
+{job}
+
+RESUME:
+{resume}
+
+---
+
+OUTPUT — follow this structure EXACTLY (use double braces since this is a template):
+
+{{
+  "summary": {{
+    "overall_match_percentage": 72,
+    "ats_score": 68,
+    "selection_probability": 60
+  }},
+
+  "match_analysis": {{
+    "matching_skills": [
+      {{
+        "skill_name": "Python",
+        "proficiency_level": "Expert",
+        "evidence": ["Built Django REST API", "Used in 3 projects"]
+      }}
+    ],
+    "missing_skills": [
+      {{
+        "skill_name": "Docker",
+        "priority": "High",
+        "suggestion": "Add Docker to projects or get certified"
+      }}
+    ],
+    "skills_gap_analysis": {{
+      "technical_skills": "Candidate lacks containerization skills (Docker/Kubernetes) which are required. Strong in Python and ML frameworks.",
+      "soft_skills": "Leadership experience is limited; the role requires team management experience."
+    }},
+    "experience_match_analysis": "Candidate has 2 years of experience; role requires 3+. Core responsibilities overlap 70%.",
+    "education_match_analysis": "B.Tech in CS matches the required degree. No advanced certification mentioned.",
+    "key_strengths": [
+      "Strong Python and ML background",
+      "Relevant project portfolio",
+      "Good communication skills evident from internship"
+    ],
+    "areas_of_improvement": [
+      "Add containerization skills (Docker)",
+      "Quantify achievements with metrics",
+      "Include leadership/team examples"
+    ]
+  }},
+
+  "ats_optimization": {{
+    "ats_score": 68,
+    "missing_keywords": {{
+      "technical_skills": ["Docker", "Kubernetes"],
+      "soft_skills": ["Leadership", "Agile"],
+      "tools_technologies": ["Jenkins", "Terraform"],
+      "certifications": ["AWS Certified Developer"]
+    }},
+    "keyword_density_issues": [
+      {{
+        "keyword": "Python",
+        "current_frequency": 2,
+        "recommended_frequency": 5,
+        "suggestion": "Mention Python in skills section, project descriptions, and summary"
+      }}
+    ],
+    "formatting_recommendations": [
+      {{
+        "issue": "No professional summary section",
+        "section": "Header",
+        "suggestion": "Add a 3-sentence professional summary with target role keywords at the top",
+        "priority": "High"
+      }}
+    ],
+    "section_organization": [
+      {{
+        "current": "Skills section at the bottom",
+        "recommended": "Move Skills section right after Summary/Objective",
+        "reason": "ATS scanners prioritize top sections and keyword-dense areas"
+      }}
+    ]
+  }}
+}}
+
+{format_instructions}

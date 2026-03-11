@@ -1,173 +1,171 @@
+// Dashboard.jsx — Gen Z Bento Design
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Target, TrendingUp, CheckCircle, Sparkles } from 'lucide-react';
+import {
+  FileSearch, BarChart3, Map, Zap, Target,
+  ArrowUpRight, Sparkles, TrendingUp, CheckCircle,
+  BrainCircuit, Rocket, Star, Shield
+} from 'lucide-react';
 import apiService from '../services/api';
 import '../Styles/Dashboard.css';
-import '../Styles/DashboardNew.css';
 
-const Dashboard = () => {
+export default function Dashboard() {
   const [backendStatus, setBackendStatus] = useState(null);
 
   useEffect(() => {
-    checkBackendStatus();
+    apiService.healthCheck()
+      .then(data => setBackendStatus({ ok: true, data }))
+      .catch(() => setBackendStatus({ ok: false }));
   }, []);
 
-  const checkBackendStatus = async () => {
-    try {
-      const response = await apiService.healthCheck();
-      setBackendStatus({ connected: true, data: response });
-    } catch (error) {
-      setBackendStatus({ connected: false, error: error });
-    }
-  };
-
-  const features = [
-    {
-      icon: Target,
-      title: 'Resume-Job Matching',
-      description: 'AI-powered analysis to match your resume with job descriptions and get detailed similarity scores',
-      color: '#667eea',
-    },
-    {
-      icon: Sparkles,
-      title: 'Skills Analysis',
-      description: 'Identify matching and missing skills with visual charts and actionable recommendations',
-      color: '#764ba2',
-    },
-    {
-      icon: TrendingUp,
-      title: 'ATS Optimization',
-      description: 'Optimize your resume for Applicant Tracking Systems with keyword suggestions and formatting tips',
-      color: '#f093fb',
-    },
-    {
-      icon: CheckCircle,
-      title: 'Cover Letter Generator',
-      description: 'Generate professional, tailored cover letters that complement your resume perfectly',
-      color: '#4facfe',
-    },
-  ];
-
-  const steps = [
-    {
-      number: '1',
-      title: 'Upload Resume',
-      description: 'Upload your resume in PDF or DOCX format',
-    },
-    {
-      number: '2',
-      title: 'Add Job Description',
-      description: 'Paste the complete job description you want to apply for',
-    },
-    {
-      number: '3',
-      title: 'Get AI Analysis',
-      description: 'Receive comprehensive analysis across multiple tabs with actionable insights',
-    },
-  ];
-
   return (
-    <div className="dashboard">
-      <div className="dashboard-container">
-        {/* Hero Section */}
-        <div className="hero-section">
-          <h1 className="hero-title">
-            Welcome to <span className="gradient-text">AI Career Agent</span>
-          </h1>
-          <p className="hero-subtitle">
-            Your intelligent assistant for resume optimization, job matching, and career success powered by advanced AI
-          </p>
+    <div className="db-page">
 
-          {backendStatus && (
-            <div className={`backend-status ${backendStatus.connected ? 'connected' : 'disconnected'}`}>
-              {backendStatus.connected ? (
-                <>
-                  <CheckCircle size={20} />
-                  <span>Backend Connected • {backendStatus.data.version}</span>
-                </>
-              ) : (
-                <>
-                  <span>⚠️ Backend Disconnected</span>
-                </>
-              )}
-            </div>
-          )}
+      {/* ─── HERO ────────────────────────────── */}
+      <div className="db-hero">
+        <div className="db-hero-eyebrow">
+          <Sparkles size={12} /> AI-Powered Career Intelligence
         </div>
 
-        {/* Features Grid */}
-        <div className="features-section">
-          <h2 className="section-title">What We Offer</h2>
-          <div className="features-grid">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="feature-card-static">
-                  <div className="feature-icon" style={{ background: feature.color }}>
-                    <Icon size={28} color="white" />
-                  </div>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.description}</p>
-                </div>
-              );
-            })}
+        <h1 className="db-hero-title">
+          Land Your Dream Job
+          <span className="line-2">Faster Than Ever 🚀</span>
+        </h1>
+
+        <p className="db-hero-sub">
+          Upload your resume, drop a job description — get ATS scores, skill gaps,
+          market insights & a roadmap tailored to your career in seconds.
+        </p>
+
+        <div className="db-hero-ctas">
+          <Link to="/job-analyzer" className="db-cta-primary">
+            <Zap size={16} /> Start Analyzing
+          </Link>
+          <Link to="/roadmap" className="db-cta-secondary">
+            <Map size={16} /> Build Roadmap
+          </Link>
+        </div>
+
+        {backendStatus && (
+          <div className="db-status">
+            <span className={`db-status-dot ${backendStatus.ok ? '' : 'offline'}`} />
+            {backendStatus.ok ? 'AI Backend Online' : 'Backend Offline — Start server'}
+          </div>
+        )}
+      </div>
+
+      {/* ─── BENTO GRID ──────────────────────── */}
+      <div className="db-bento">
+
+        {/* Card 1: Job Analyzer — wide tall */}
+        <Link to="/job-analyzer" className="db-card db-card--purple db-card--wide db-card--tall" style={{ textDecoration: 'none' }}>
+          <div className="db-card-orb" />
+          <div className="db-card-arrow"><ArrowUpRight size={16} /></div>
+          <div className="db-card-icon"><FileSearch size={22} /></div>
+          <div>
+            <div className="db-card-tag db-card-tag--purple"><Target size={10} /> Most Used</div>
+            <div className="db-card-title">Resume & Job Analyzer</div>
+            <div className="db-card-desc">ATS optimization, skill gap analysis, match score & cover letter in one shot.</div>
+          </div>
+        </Link>
+
+        {/* Card 2: ATS Score stat */}
+        <div className="db-card db-card--pink db-card--narrow">
+          <div className="db-card-orb" />
+          <div className="db-card-label">Avg ATS Boost</div>
+          <div className="db-card-stat" style={{ background: 'linear-gradient(135deg,#ec4899,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>+37%</div>
+          <div className="db-card-desc">score improvement after optimization</div>
+        </div>
+
+        {/* Card 3: Market Analyzer */}
+        <Link to="/market-analyzer" className="db-card db-card--blue db-card--narrow" style={{ textDecoration: 'none' }}>
+          <div className="db-card-orb" />
+          <div className="db-card-arrow"><ArrowUpRight size={16} /></div>
+          <div className="db-card-icon"><BarChart3 size={22} /></div>
+          <div>
+            <div className="db-card-title">Market Intelligence</div>
+            <div className="db-card-desc">Salary data, demand level & skill trends for any role.</div>
+          </div>
+        </Link>
+
+        {/* Card 4: Skills matched stat */}
+        <div className="db-card db-card--cyan db-card--small">
+          <div className="db-card-orb" />
+          <div className="db-card-label">Skills Matched</div>
+          <div className="db-card-stat" style={{ background: 'linear-gradient(135deg,#06b6d4,#6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>92%</div>
+          <div className="db-card-desc">accuracy in gap detection</div>
+        </div>
+
+        {/* Card 5: Roadmap */}
+        <Link to="/roadmap" className="db-card db-card--purple db-card--med" style={{ textDecoration: 'none' }}>
+          <div className="db-card-orb" />
+          <div className="db-card-arrow"><ArrowUpRight size={16} /></div>
+          <div className="db-card-icon"><Map size={22} /></div>
+          <div>
+            <div className="db-card-tag db-card-tag--purple"><Star size={10} /> Week-by-Week</div>
+            <div className="db-card-title">Learning Roadmap</div>
+            <div className="db-card-desc">AI-generated path with mini-projects for any career goal.</div>
+          </div>
+        </Link>
+
+        {/* Card 6: Powered by */}
+        <div className="db-card db-card--dark db-card--small">
+          <div className="db-card-label">Powered by</div>
+          <div className="db-card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <BrainCircuit size={18} color="#a855f7" /> Gemini AI
+          </div>
+          <div className="db-card-desc" style={{ marginTop: '0.3rem' }}>+ Groq LLaMA 3.3</div>
+        </div>
+
+        {/* Card 7: Cover Letter stat */}
+        <div className="db-card db-card--green db-card--small">
+          <div className="db-card-orb" />
+          <div className="db-card-label">Cover Letter</div>
+          <div className="db-card-stat" style={{ background: 'linear-gradient(135deg,#10b981,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI</div>
+          <div className="db-card-desc">Tailored in seconds</div>
+        </div>
+
+        {/* Card 8: Career Chat — wide */}
+        <div className="db-card db-card--pink db-card--wide">
+          <div className="db-card-orb" />
+          <div className="db-card-icon"><Rocket size={22} /></div>
+          <div>
+            <div className="db-card-tag db-card-tag--pink"><Sparkles size={10} /> New</div>
+            <div className="db-card-title">AI Career Chatbot</div>
+            <div className="db-card-desc">Ask anything — routes to the right agent automatically. Tap the 🧠 in the bottom-right!</div>
           </div>
         </div>
 
-        {/* How It Works */}
-        <div className="steps-section">
-          <h2 className="section-title">How It Works</h2>
-          <div className="steps-grid">
-            {steps.map((step, index) => (
-              <div key={index} className="step-card">
-                <div className="step-number">{step.number}</div>
-                <h3>{step.title}</h3>
-                <p>{step.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+      </div>
 
-        {/* CTA Section */}
-        <div className="cta-section">
-          <div className="cta-content">
-            <TrendingUp size={48} className="cta-icon" />
-            <h2>Ready to Boost Your Career?</h2>
-            <p>Start by uploading your resume and let our AI-powered system analyze your job match in seconds</p>
-            <Link to="/job-analyzer" className="cta-button">
-              Get Started Now
-            </Link>
+      {/* ─── HOW IT WORKS ────────────────────── */}
+      <div className="db-steps">
+        <p className="db-steps-title">How it works ⚡</p>
+        <div className="db-steps-grid">
+          <div className="db-step">
+            <div className="db-step-num">01</div>
+            <div className="db-step-body">
+              <h3>Upload Resume</h3>
+              <p>Drop your PDF or DOCX — we extract every detail automatically.</p>
+            </div>
           </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className="stats-section">
-          <h2 className="section-title">Why Choose AI Career Agent?</h2>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-number">⚡</div>
-              <h3>Lightning Fast</h3>
-              <p>Get comprehensive analysis in under 30 seconds</p>
+          <div className="db-step">
+            <div className="db-step-num">02</div>
+            <div className="db-step-body">
+              <h3>Paste Job Description</h3>
+              <p>Add any JD from LinkedIn, Naukri, or anywhere else.</p>
             </div>
-            <div className="stat-card">
-              <div className="stat-number">🎯</div>
-              <h3>Highly Accurate</h3>
-              <p>Advanced AI models trained on thousands of resumes</p>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">📊</div>
-              <h3>Detailed Insights</h3>
-              <p>Multi-tab analysis with charts and visualizations</p>
-            </div>
-            <div className="stat-card">
-              <div className="stat-number">🔒</div>
-              <h3>Secure & Private</h3>
-              <p>Your data is processed securely and never shared</p>
+          </div>
+          <div className="db-step">
+            <div className="db-step-num">03</div>
+            <div className="db-step-body">
+              <h3>Get Full AI Report</h3>
+              <p>Instant ATS score, match %, missing skills, cover letter & roadmap.</p>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
-};
-
-export default Dashboard;
+}

@@ -1,73 +1,99 @@
-import React, { useState } from 'react';
-import { toast } from 'react-toastify';
-import { 
-  Briefcase, Upload, Target, Zap, Mail, 
-  Loader, CheckCircle, AlertCircle 
-} from 'lucide-react';
-import apiService from '../services/api';
-import ResumeUploader from '../components/ResumeUploader/ResumeUploader';
-import JobDescriptionForm from '../components/JobDescriptionForm/JobDescriptionForm';
-import SkillsAnalysis from '../components/SkillsAnalysis/SkillsAnalysis';
-import ATSRecommendations from '../components/ATSRecommendations/ATSRecommendations';
-import CoverLetterGenerator from '../components/CoverLetterGenerator/CoverLetterGenerator';
-import '../Styles/JobAnalyzer.css';
+import React, { useState } from "react";
+import { toast } from "react-toastify";
+import {
+  Briefcase,
+  Upload,
+  Target,
+  Zap,
+  Mail,
+  Loader,
+  CheckCircle,
+  AlertCircle
+} from "lucide-react";
+
+import apiService from "../services/api";
+
+import ResumeUploader from "../components/ResumeUploader/ResumeUploader";
+import JobDescriptionForm from "../components/JobDescriptionForm/JobDescriptionForm";
+
+import SkillsAnalysis from "../components/SkillsAnalysis/SkillsAnalysis";
+import ATSRecommendations from "../components/ATSRecommendations/ATSRecommendations";
+import CoverLetterGenerator from "../components/CoverLetterGenerator/CoverLetterGenerator";
+
+import "../Styles/JobAnalyzer.css";
 
 const JobAnalyzer = () => {
-  const [activeTab, setActiveTab] = useState('upload');
+  const [activeTab, setActiveTab] = useState("upload");
+
   const [resumeUploaded, setResumeUploaded] = useState(false);
   const [jobAnalyzed, setJobAnalyzed] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
-  
+
   const [matchData, setMatchData] = useState(null);
   const [atsData, setAtsData] = useState(null);
   const [coverLetterData, setCoverLetterData] = useState(null);
 
   const tabs = [
-    { id: 'upload', label: 'Upload & Analyze', icon: Upload },
-    { id: 'skills', label: 'Skills Analysis', icon: Target, disabled: !matchData },
-    { id: 'ats', label: 'ATS Recommendations', icon: Zap, disabled: !atsData },
-    { id: 'cover-letter', label: 'Cover Letter', icon: Mail, disabled: !coverLetterData },
+    { id: "upload", label: "Upload & Analyze", icon: Upload },
+    { id: "skills", label: "Skills Analysis", icon: Target, disabled: !matchData },
+    { id: "ats", label: "ATS Optimization", icon: Zap, disabled: !atsData },
+    { id: "cover-letter", label: "Cover Letter", icon: Mail, disabled: !coverLetterData }
   ];
 
-  const handleResumeUpload = (response) => {
-    console.log('✅ Resume uploaded:', response);
+  const handleResumeUpload = () => {
     setResumeUploaded(true);
-    toast.success('Resume uploaded successfully!');
+    toast.success("Resume uploaded successfully");
   };
 
-  const handleJobAnalyze = (response) => {
-    console.log('✅ Job analyzed:', response);
+  const handleJobAnalyze = () => {
     setJobAnalyzed(true);
-    toast.success('Job description analyzed successfully!');
+    toast.success("Job description saved");
   };
 
   const handleAnalyzeAll = async () => {
     if (!resumeUploaded || !jobAnalyzed) {
-      toast.warning('Please upload resume and job description first');
+      toast.warning("Please upload resume and job description first");
       return;
     }
 
     setAnalyzing(true);
 
     try {
-      toast.info('Analyzing resume-job match...');
-      const matchResponse = await apiService.matchResumeJob();
-      setMatchData(matchResponse);
-      
-      toast.info('Getting ATS recommendations...');
-      const atsResponse = await apiService.getATSOptimization();
-      setAtsData(atsResponse);
-      
-      toast.info('Generating cover letter...');
+      toast.info("Running complete AI analysis...");
+
+      // ✅ Unified backend call
+      const result = await apiService.analyzeResume();
+      // const result = ANALYZE_RESPONSE;
+
+      // ✅ IMPORTANT: normalize backend response
+      const analysis = result?.analysis;
+
+      if (!analysis) {
+        throw new Error("Invalid analysis response from backend");
+      }
+
+      // ✅ Skills Analysis Tab
+      setMatchData({
+        summary: analysis.summary,
+        match_analysis: analysis.match_analysis
+      });
+
+      // ✅ ATS Optimization Tab
+      setAtsData({
+        summary: analysis.summary,
+        ats_optimization: analysis.ats_optimization
+      });
+
+      // ✅ Cover Letter
       const coverLetterResponse = await apiService.generateCoverLetter();
       setCoverLetterData(coverLetterResponse);
 
-      toast.success('Complete analysis finished!');
-      setActiveTab('skills');
-      
+      toast.success("Complete analysis finished");
+      setActiveTab("skills");
+
     } catch (error) {
-      toast.error(error.detail || 'Analysis failed. Please try again.');
-      console.error('Analysis error:', error);
+      console.error("Analysis error:", error);
+      toast.error(error?.detail || error?.message || "Analysis failed");
     } finally {
       setAnalyzing(false);
     }
@@ -75,9 +101,10 @@ const JobAnalyzer = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'upload':
+      case "upload":
         return (
           <div className="upload-tab-content">
+
             <div className="upload-sections">
               <div className="upload-section">
                 <div className="section-badge">Step 1</div>
@@ -93,10 +120,11 @@ const JobAnalyzer = () => {
             {resumeUploaded && jobAnalyzed && (
               <div className="analyze-section">
                 <div className="analyze-card">
-                  <h3>Ready to Analyze!</h3>
-                  <p>Your resume and job description are uploaded. Click below to start the complete AI analysis.</p>
-                  <button 
-                    onClick={handleAnalyzeAll} 
+                  <h3>Ready to Analyze</h3>
+                  <p>Your resume and job description are ready.</p>
+
+                  <button
+                    onClick={handleAnalyzeAll}
                     disabled={analyzing}
                     className="analyze-all-button"
                   >
@@ -116,65 +144,46 @@ const JobAnalyzer = () => {
               </div>
             )}
 
-            <div style={{ 
-              marginTop: '2rem', 
-              padding: '1rem', 
-              background: '#f0f0f0', 
-              borderRadius: '8px',
-              fontSize: '0.9rem'
-            }}>
-              <strong>Debug Info:</strong><br/>
-              Resume Uploaded: {resumeUploaded ? '✅ Yes' : '❌ No'}<br/>
-              Job Analyzed: {jobAnalyzed ? '✅ Yes' : '❌ No'}<br/>
-              Match Data: {matchData ? '✅ Available' : '❌ Null'}<br/>
-              ATS Data: {atsData ? '✅ Available' : '❌ Null'}<br/>
-              Cover Letter Data: {coverLetterData ? '✅ Available' : '❌ Null'}
-            </div>
-
             {analyzing && (
               <div className="analysis-progress">
                 <Loader size={48} className="spinner" />
-                <h3>AI Analysis in Progress...</h3>
-                <p>This may take 10-30 seconds. Please wait.</p>
+                <h3>AI Analysis in Progress</h3>
+                <p>This may take 10–30 seconds.</p>
+
                 <div className="progress-steps">
                   <div className="progress-step">
                     <CheckCircle size={20} />
-                    <span>Matching resume with job</span>
+                    <span>Analyzing resume</span>
+                  </div>
+                  <div className="progress-step">
+                    <Loader size={20} className="spinner" />
+                    <span>Matching skills</span>
                   </div>
                   <div className="progress-step">
                     <Loader size={20} className="spinner" />
                     <span>Optimizing for ATS</span>
                   </div>
-                  <div className="progress-step">
-                    <Loader size={20} className="spinner" />
-                    <span>Generating cover letter</span>
-                  </div>
                 </div>
               </div>
             )}
+
           </div>
         );
 
-      case 'skills':
-        return matchData ? (
-          <SkillsAnalysis data={matchData} />
-        ) : (
-          <EmptyState message="No skills analysis available. Please complete the upload and analysis first." />
-        );
+      case "skills":
+        return matchData
+          ? <SkillsAnalysis data={matchData} />
+          : <EmptyState message="No skills analysis available yet." />;
 
-      case 'ats':
-        return atsData ? (
-          <ATSRecommendations data={atsData} />
-        ) : (
-          <EmptyState message="No ATS recommendations available. Please complete the upload and analysis first." />
-        );
+      case "ats":
+        return atsData
+          ? <ATSRecommendations data={atsData} />
+          : <EmptyState message="No ATS optimization available yet." />;
 
-      case 'cover-letter':
-        return coverLetterData ? (
-          <CoverLetterGenerator data={coverLetterData} />
-        ) : (
-          <EmptyState message="No cover letter generated yet. Please complete the upload and analysis first." />
-        );
+      case "cover-letter":
+        return coverLetterData
+          ? <CoverLetterGenerator data={coverLetterData} />
+          : <EmptyState message="No cover letter generated yet." />;
 
       default:
         return null;
@@ -183,10 +192,11 @@ const JobAnalyzer = () => {
 
   return (
     <div className="job-analyzer-page">
+
       <div className="page-header">
         <Briefcase size={40} className="page-icon" />
         <h1>AI Job Analyzer</h1>
-        <p>Upload your resume, analyze job descriptions, and get AI-powered insights</p>
+        <p>Upload resume, analyze job descriptions, and get instant AI insights</p>
       </div>
 
       <div className="tabs-container">
@@ -196,7 +206,7 @@ const JobAnalyzer = () => {
             return (
               <button
                 key={tab.id}
-                className={`tab-button ${activeTab === tab.id ? 'active' : ''} ${tab.disabled ? 'disabled' : ''}`}
+                className={`tab-button ${activeTab === tab.id ? "active" : ""} ${tab.disabled ? "disabled" : ""}`}
                 onClick={() => !tab.disabled && setActiveTab(tab.id)}
                 disabled={tab.disabled}
               >

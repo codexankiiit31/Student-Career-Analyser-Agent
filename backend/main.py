@@ -1,686 +1,320 @@
 from fastapi import FastAPI, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
-import uvicorn
-import json
-import os
 from pathlib import Path
 from datetime import datetime
+import json
+import uuid
+import uvicorn
+import logging
 
-# Existing Career Agent imports
-# from utils.process_utils import extract_and_clean_text
-from utils.similarity_search import compute_similarity
-from utils.response_formetter import format_match_response, format_ats_response, format_cover_letter, format_error_response,extract_and_clean_text
-from agents.job_anayzer_agent import CareerAgent
-
-# Market Analysis imports
-from agents.market_insights_agent import MarketAnalysisAgent
-
-# NEW: Career Roadmap imports
-from agents.Roadmap_agent import RoadmapAgent
+logger = logging.getLogger(__name__)
 
 # ============================================
-# APP INITIALIZATION
+# AGENTS
+# ============================================
+
+from agents.job_anayzer_agent import CareerAgent
+from agents.market_insights_agent import MarketAnalysisAgent
+from agents.Roadmap_agent import RoadmapLLM
+from agents.chatbot_router_agent import ChatbotRouterAgent
+
+from utils.similarity_search import compute_similarity
+from utils.response_formetter import (
+    extract_and_clean_text,
+    format_cover_letter,
+    format_error_response
+)
+
+# ============================================
+# APP INIT
 # ============================================
 
 app = FastAPI(
-    title="AI Career & Market Analysis Agent",
-    version="3.0",
-    description="Unified AI-powered career assistance: Resume matching, ATS optimization, live job market analysis, and career roadmaps"
+    title="AI Career Intelligence Platform",
+    version="4.0",
+    description="Chat-based AI career assistant with routing, memory, and multi-agent execution"
 )
 
-# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ============================================
-# CONFIGURATION
+# FILE STORAGE (RESUME / JOB)
 # ============================================
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "database"
-MEMORY_STORE_PATH = DATA_DIR / "memory_store.json"
-CACHE_PATH = DATA_DIR / "cache.json"
-
-# Ensure database directory exists
 DATA_DIR.mkdir(exist_ok=True)
 
-# ============================================
-# INITIALIZE AGENTS
-# ============================================
+MEMORY_PATH = DATA_DIR / "memory_store.json"
 
-# Career Agent (Your existing system)
-try:
-    career_agent = CareerAgent()
-    print("✅ CareerAgent initialized successfully")
-except Exception as e:
-    print(f"❌ Failed to initialize CareerAgent: {e}")
-    career_agent = None
+def load_memory():
+    if not MEMORY_PATH.exists():
+        return {}
+    return json.loads(MEMORY_PATH.read_text(encoding="utf-8"))
 
-# Market Analysis Agent
-try:
-    market_agent = MarketAnalysisAgent()
-    print("✅ MarketAnalysisAgent initialized successfully")
-except Exception as e:
-    print(f"❌ Failed to initialize MarketAnalysisAgent: {e}")
-    market_agent = None
-
-# Roadmap Agent
-try:
-    roadmap_agent = RoadmapAgent()
-    print("✅ RoadmapAgent initialized successfully")
-except Exception as e:
-    print(f"❌ Failed to initialize RoadmapAgent: {e}")
-    roadmap_agent = None
+def save_memory(data: dict):
+    MEMORY_PATH.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False),
+        encoding="utf-8"
+    )
 
 # ============================================
-# PYDANTIC MODELS
+# CHAT MEMORY (PER SESSION)
 # ============================================
 
-class MarketAnalysisRequest(BaseModel):
+CHAT_MEMORY = {}
+
+def get_chat_history(session_id: str):
+    return CHAT_MEMORY.get(session_id, [])
+
+def save_chat_message(session_id: str, role: str, content: str):
+    CHAT_MEMORY.setdefault(session_id, []).append(
+        {"role": role, "content": content}
+    )
+
+def format_chat_history(history):
+    return "\n".join(
+        f"{msg['role'].upper()}: {msg['content']}"
+        for msg in history
+    )
+
+# ============================================
+# INIT AGENTS
+# ============================================
+
+career_agent = CareerAgent()
+market_agent = MarketAnalysisAgent()
+chatbot_router = ChatbotRouterAgent()
+
+# ============================================
+# MODELS
+# ============================================
+
+class MarketRequest(BaseModel):
     role: str
     location: Optional[str] = None
     experience_level: Optional[str] = "entry"
 
-class MarketAnalysisResponse(BaseModel):
-    role: str
-    market_summary: dict
-    skill_insights: dict
-    live_jobs: list
-    timestamp: str
-    status: str
-
-#  Roadmap Models
 class RoadmapRequest(BaseModel):
     query: str
-    duration_months: Optional[int] = 3
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "query": "Give me a roadmap to become a Full Stack Developer",
-                "duration_months": 3
-            }
-        }
 
-class VideoInfo(BaseModel):
-    title: str
-    url: str
-    channel: str
-    description: str
-
-class RoadmapResponse(BaseModel):
-    success: bool
-    career: Optional[str] = None
-    roadmap: Optional[str] = None
-    additional_videos: Optional[List[VideoInfo]] = None
-    sources_used: Optional[int] = None
-    error: Optional[str] = None
-
-class TipsRequest(BaseModel):
-    career: str
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "career": "Data Science"
-            }
-        }
-
-class TipsResponse(BaseModel):
-    success: bool
-    tips: Optional[List[str]] = None
-    error: Optional[str] = None
+class ChatRequest(BaseModel):
+    message: str
+    session_id: Optional[str] = None
 
 # ============================================
-# UTILITY FUNCTIONS
+# ROOT / HEALTH
 # ============================================
 
-def load_memory() -> dict:
-    """Load stored resume and job data from JSON file."""
-    if not MEMORY_STORE_PATH.exists():
-        return {"resume_text": "", "job_description": ""}
-    
-    try:
-        with open(MEMORY_STORE_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except json.JSONDecodeError:
-        return {"resume_text": "", "job_description": ""}
-
-
-def save_memory(data: dict) -> None:
-    """Save resume and job data to JSON file."""
-    with open(MEMORY_STORE_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
-# ============================================
-# ROOT & HEALTH ENDPOINTS
-# ============================================
-
-@app.get("/")
-async def root():
-    """Main API information endpoint."""
+@app.get("/health")
+def root():
     return {
-        "message": "🚀 AI Career & Market Analysis Agent v3.0",
-        "status": "active",
-        "version": "3.0",
-        "systems": {
-            "career_agent": "enabled" if career_agent else "disabled",
-            "market_agent": "enabled" if market_agent else "disabled",
-            "roadmap_agent": "enabled" if roadmap_agent else "disabled"
-        },
-        "endpoints": {
-            "career_analysis": {
-                "upload_resume": "/upload_resume",
-                "analyze_job": "/analyze_job",
-                "match_resume_job": "/match_resume_job",
-                "ats_optimization": "/ats_optimization",
-                "generate_cover_letter": "/generate_cover_letter"
-            },
-            "market_analysis": {
-                "analyze_market": "/api/market_analysis",
-                "get_cache": "/api/cache",
-                "health": "/api/health"
-            },
-            "career_roadmap": {
-                "get_roadmap": "/api/get_roadmap",
-                "get_tips": "/api/get_tips"
-            },
-            "data_management": {
-                "get_stored_data": "/get_stored_data",
-                "clear_data": "/clear_data"
-            }
-        },
-        "features": [
-            "Deep resume-job matching",
-            "ATS optimization",
-            "Cover letter generation",
-            "Live market salary analysis",
-            "Skill trend insights",
-            "Job opportunity recommendations",
-            "Week-by-week career roadmaps",
-            "YouTube learning resources",
-            "Career tips and guidance"
-        ]
-    }
-
-
-@app.get("/api/health")
-async def health_check():
-    """System health check endpoint."""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "agents": {
-            "career_agent_ready": career_agent is not None,
-            "market_agent_ready": market_agent.is_ready() if market_agent else False,
-            "roadmap_agent_ready": roadmap_agent is not None
+        "status": "running",
+        "version": "4.0",
+        "services": {
+            "career_agent": True,
+            "market_agent": True,
+            "roadmap_rag": True,
+            "chat_router": True
         }
     }
 
 # ============================================
-# CAREER AGENT ENDPOINTS (Existing System)
+# RESUME FLOW
 # ============================================
 
 @app.post("/upload_resume")
 async def upload_resume(file: UploadFile):
-    """
-    Extract and clean text from uploaded resume (PDF/DOCX).
-    """
-    try:
-        if not file.filename:
-            raise HTTPException(status_code=400, detail="No filename provided")
-        
-        file_extension = file.filename.split(".")[-1].lower()
-        if file_extension not in ["pdf", "docx"]:
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid file format. Please upload PDF or DOCX file."
-            )
-        
-        # Extract text
-        text = extract_and_clean_text(file)
-        
-        if not text or len(text.strip()) < 50:
-            raise HTTPException(
-                status_code=400,
-                detail="Could not extract sufficient text from resume. Please check the file."
-            )
-        
-        # Save to memory
-        memory = load_memory()
-        memory["resume_text"] = text
-        memory["uploaded_filename"] = file.filename
-        memory["upload_timestamp"] = datetime.now().isoformat()
-        save_memory(memory)
-        
-        return {
-            "message": "✅ Resume uploaded successfully!",
-            "filename": file.filename,
-            "resume_length": len(text),
-            "word_count": len(text.split()),
-            "character_count": len(text),
-            "status": "ready_for_analysis"
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing resume: {str(e)}")
+    if not file.filename:
+        raise HTTPException(400, "Invalid file")
 
+    text = extract_and_clean_text(file)
+
+    if len(text.strip()) < 50:
+        raise HTTPException(400, "Resume text too short")
+
+    memory = load_memory()
+    memory["resume"] = text
+    memory["resume_uploaded_at"] = datetime.now().isoformat()
+    save_memory(memory)
+
+    return {"message": "Resume uploaded successfully"}
 
 @app.post("/analyze_job")
 async def analyze_job(job_description: str = Form(...)):
-    """
-    Store job description for matching and analysis.
-    """
+    memory = load_memory()
+    memory["job"] = job_description.strip()
+    memory["job_uploaded_at"] = datetime.now().isoformat()
+    save_memory(memory)
+
+    return {"message": "Job description saved"}
+
+@app.get("/analyze_resume")
+def analyze_resume():
+    memory = load_memory()
+
+    resume = memory.get("resume")
+    job = memory.get("job")
+
+    if not resume or not job:
+        raise HTTPException(400, "Resume or Job missing")
+
     try:
-        if not job_description or len(job_description.strip()) < 20:
-            raise HTTPException(
-                status_code=400,
-                detail="Job description is too short. Please provide a detailed description."
-            )
-        
-        memory = load_memory()
-        memory["job_description"] = job_description.strip()
-        memory["job_analysis_timestamp"] = datetime.now().isoformat()
-        save_memory(memory)
-        
+        result = career_agent.unified_analysis(resume=resume, job=job)
         return {
-            "message": "✅ Job description analyzed successfully!",
-            "description_length": len(job_description),
-            "word_count": len(job_description.split()),
-            "character_count": len(job_description),
-            "status": "ready_for_matching"
+            "status": "success",
+            **result
         }
-    
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing job: {str(e)}")
-
-
-@app.get("/match_resume_job")
-async def match_resume_job():
-    """
-    Match resume with job description using agentic multi-step analysis.
-    """
-    if not career_agent:
-        raise HTTPException(status_code=500, detail="Career agent not initialized")
-    
-    try:
-        memory = load_memory()
-        resume = memory.get("resume_text", "")
-        job = memory.get("job_description", "")
-        
-        if not resume:
-            raise HTTPException(
-                status_code=400, 
-                detail="No resume uploaded. Please upload a resume first."
-            )
-        
-        if not job:
-            raise HTTPException(
-                status_code=400, 
-                detail="No job description provided. Please add a job description first."
-            )
-        
-        print("🚀 Starting agentic match analysis...")
-        
-        # Calculate similarity using embeddings
-        sim_score = compute_similarity(resume, job)
-        print(f"📊 Embedding similarity score: {sim_score}%")
-        
-        # Get comprehensive AI analysis
-        result = career_agent.match_resume_job(resume, job, sim_score)
-        
-        # Format response
-        formatted_response = format_match_response(result, sim_score)
-        
-        print(f"✅ Match analysis complete!")
-        return formatted_response
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"❌ Error in match analysis: {str(e)}")
-        return format_error_response(str(e), "match_analysis")
-
-
-@app.get("/ats_optimization")
-async def ats_optimization():
-    """
-    Suggest comprehensive ATS improvements with structured recommendations.
-    """
-    if not career_agent:
-        raise HTTPException(status_code=500, detail="Career agent not initialized")
-    
-    try:
-        memory = load_memory()
-        resume = memory.get("resume_text", "")
-        job = memory.get("job_description", "")
-        
-        if not resume:
-            raise HTTPException(
-                status_code=400, 
-                detail="No resume uploaded. Please upload a resume first."
-            )
-        
-        if not job:
-            raise HTTPException(
-                status_code=400, 
-                detail="No job description provided. Please add a job description first."
-            )
-        
-        print("🚀 Starting ATS optimization analysis...")
-        
-        # Get comprehensive ATS analysis
-        ats_result = career_agent.ats_optimization(resume, job)
-        
-        # Format response
-        formatted_response = format_ats_response(ats_result)
-        
-        print(f"✅ ATS optimization complete!")
-        return formatted_response
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"❌ Error in ATS optimization: {str(e)}")
-        return format_error_response(str(e), "ats_optimization")
-
+        return format_error_response(str(e), "resume_analysis")
 
 @app.get("/generate_cover_letter")
-async def generate_cover_letter():
-    """
-    Generate a professional, tailored cover letter with metadata.
-    """
-    if not career_agent:
-        raise HTTPException(status_code=500, detail="Career agent not initialized")
-    
+def generate_cover_letter():
+    memory = load_memory()
+
+    resume = memory.get("resume")
+    job = memory.get("job")
+
+    if not resume or not job:
+        raise HTTPException(400, "Resume or Job missing")
+
     try:
-        memory = load_memory()
-        resume = memory.get("resume_text", "")
-        job = memory.get("job_description", "")
-        
-        if not resume:
-            raise HTTPException(
-                status_code=400, 
-                detail="No resume uploaded. Please upload a resume first."
-            )
-        
-        if not job:
-            raise HTTPException(
-                status_code=400, 
-                detail="No job description provided. Please add a job description first."
-            )
-        
-        print("🚀 Generating cover letter...")
-        
-        # Generate cover letter
-        letter_result = career_agent.generate_cover_letter(resume, job)
-        
-        # Format response
-        formatted_response = format_cover_letter(letter_result)
-        
-        print(f"✅ Cover letter generated!")
-        return formatted_response
-    
-    except HTTPException:
-        raise
+        result = career_agent.generate_cover_letter(resume, job)
+        return {
+            "status": "success",
+            "generated_letter": result.get("cover_letter", ""),
+            "word_count": result.get("word_count", 0),
+            "opening_hook": result.get("opening_hook", ""),
+            "call_to_action": result.get("call_to_action", ""),
+            "key_highlights": result.get("key_highlights", []),
+            "tone": "professional"
+        }
     except Exception as e:
-        print(f"❌ Error generating cover letter: {str(e)}")
         return format_error_response(str(e), "cover_letter")
 
 # ============================================
-# MARKET ANALYSIS ENDPOINTS (Existing System)
+# MARKET ANALYSIS
 # ============================================
 
-@app.post("/api/market_analysis", response_model=MarketAnalysisResponse)
-async def analyze_market(request: MarketAnalysisRequest):
-    """
-    Analyze job market for a given role with live data.
-    
-    Returns salary trends, skill insights, and job opportunities.
-    """
-    if not market_agent:
-        raise HTTPException(status_code=500, detail="Market analysis agent not initialized")
-    
+@app.post("/api/market_analysis")
+def market_analysis(request: MarketRequest):
     try:
-        print(f"🔍 Analyzing market for: {request.role}")
-        
-        # Run the market analysis agent
-        result = await market_agent.analyze_market(
+        result = market_agent.analyze_market(
             role=request.role,
             location=request.location,
             experience_level=request.experience_level
         )
-        
-        return MarketAnalysisResponse(
-            role=request.role,
-            market_summary=result["market_summary"],
-            skill_insights=result["skill_insights"],
-            live_jobs=result["live_jobs"],
-            timestamp=datetime.now().isoformat(),
-            status="success"
-        )
-    
-    except Exception as e:
-        print(f"❌ Error in market analysis: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
-
-
-@app.get("/api/cache")
-async def get_cache():
-    """
-    Get cached historical market data.
-    """
-    try:
-        if not CACHE_PATH.exists():
-            return {"status": "success", "data": {}, "message": "No cache found"}
-        
-        with open(CACHE_PATH, "r") as f:
-            cache_data = json.load(f)
-        return {"status": "success", "data": cache_data}
-    except json.JSONDecodeError:
-        return {"status": "success", "data": {}, "message": "Cache corrupted, returning empty"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.delete("/api/cache")
-async def clear_cache():
-    """
-    Clear the market analysis cache.
-    """
-    try:
-        with open(CACHE_PATH, "w") as f:
-            json.dump({}, f)
-        return {"status": "success", "message": "Cache cleared"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# ============================================
-# CAREER ROADMAP ENDPOINTS 
-# ============================================
-
-@app.post("/api/get_roadmap", response_model=RoadmapResponse)
-async def get_roadmap(request: RoadmapRequest):
-    """
-    Generate a personalized career roadmap with week-by-week structure.
-    
-    Args:
-        request: RoadmapRequest with career query and duration
-    
-    Returns:
-        RoadmapResponse with structured roadmap, videos, and courses
-    """
-    if not roadmap_agent:
-        raise HTTPException(status_code=500, detail="Roadmap agent not initialized")
-    
-    try:
-        if not request.query or len(request.query.strip()) < 5:
-            raise HTTPException(
-                status_code=400,
-                detail="Query must be at least 5 characters long"
-            )
-        
-        print(f"🎯 Generating roadmap for: {request.query}")
-        
-        # Generate roadmap
-        result = roadmap_agent.generate_roadmap(request.query)
-        
-        if not result['success']:
-            raise HTTPException(
-                status_code=500,
-                detail=result.get('error', 'Failed to generate roadmap')
-            )
-        
-        # Convert additional videos to VideoInfo models
-        videos = [
-            VideoInfo(**video) for video in result.get('additional_videos', [])
-        ]
-        
-        print(f"✅ Roadmap generated successfully!")
-        
-        return RoadmapResponse(
-            success=True,
-            career=result.get('career'),
-            roadmap=result.get('roadmap'),
-            additional_videos=videos,
-            sources_used=result.get('sources_used')
-        )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"❌ Error generating roadmap: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
-
-
-@app.post("/api/get_tips", response_model=TipsResponse)
-async def get_tips(request: TipsRequest):
-    """
-    Get quick career tips for a specific role.
-    
-    Args:
-        request: TipsRequest with career name
-    
-    Returns:
-        TipsResponse with list of actionable tips
-    """
-    if not roadmap_agent:
-        raise HTTPException(status_code=500, detail="Roadmap agent not initialized")
-    
-    try:
-        if not request.career or len(request.career.strip()) < 2:
-            raise HTTPException(
-                status_code=400,
-                detail="Career name must be at least 2 characters long"
-            )
-        
-        print(f"💡 Getting tips for: {request.career}")
-        
-        tips = roadmap_agent.get_quick_tips(request.career)
-        
-        return TipsResponse(
-            success=True,
-            tips=tips
-        )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"❌ Error getting tips: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
-
-# ============================================
-# DATA MANAGEMENT ENDPOINTS
-# ============================================
-
-@app.get("/get_stored_data")
-async def get_stored_data():
-    """
-    Retrieve currently stored resume and job description info.
-    """
-    try:
-        memory = load_memory()
-        resume = memory.get("resume_text", "")
-        job = memory.get("job_description", "")
-        
         return {
-            "has_resume": bool(resume),
-            "has_job_description": bool(job),
-            "resume_word_count": len(resume.split()) if resume else 0,
-            "job_word_count": len(job.split()) if job else 0,
-            "uploaded_filename": memory.get("uploaded_filename", "N/A"),
-            "upload_timestamp": memory.get("upload_timestamp", "N/A"),
-            "job_analysis_timestamp": memory.get("job_analysis_timestamp", "N/A"),
-            "status": "ready" if (resume and job) else "incomplete"
+            "status": "success",
+            "timestamp": datetime.now().isoformat(),
+            "data": result
         }
-    
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving data: {str(e)}")
+        raise HTTPException(500, str(e))
 
+# ============================================
+# ROADMAP (RAG)
+# ============================================
+
+@app.post("/api/get_roadmap")
+def get_roadmap(request: RoadmapRequest):
+    if len(request.query.strip()) < 5:
+        raise HTTPException(400, "Query too short")
+
+    try:
+        roadmap_llm = RoadmapLLM(request.query)
+        roadmap = roadmap_llm.generate(request.query)
+
+        return {
+            "success": True,
+            "career": roadmap.get("career", request.query),
+            "data": roadmap
+        }
+    except Exception as e:
+        raise HTTPException(500, f"Roadmap generation failed: {str(e)}")
+
+# ============================================
+# CHATBOT ENDPOINT (ROUTER + MEMORY + STREAM)
+# ============================================
+
+@app.post("/api/chat")
+def chat(request: ChatRequest):
+
+    if not request.message.strip():
+        raise HTTPException(400, "Message cannot be empty")
+
+    session_id = request.session_id or str(uuid.uuid4())
+    history = get_chat_history(session_id)
+    history_text = format_chat_history(history)
+
+    save_chat_message(session_id, "user", request.message)
+
+    # 1. Classify intent
+    route = chatbot_router.route(
+        history=history_text,
+        message=request.message
+    )
+    intent = route.get("intent", "general_guidance")
+    role   = route.get("role")
+
+    # 2. Load resume + job from memory (used for career_analysis)
+    memory = load_memory()
+    resume = memory.get("resume", "")
+    job    = memory.get("job", "")
+
+    # 3. Generate real answer
+    try:
+        reply = chatbot_router.respond(
+            intent=intent,
+            role=role,
+            message=request.message,
+            resume=resume,
+            job=job
+        )
+    except Exception as e:
+        logger.error(f"Chat respond error: {e}")
+        reply = "I encountered an issue processing that. Could you rephrase your question?"
+
+    save_chat_message(session_id, "assistant", reply)
+
+    # 4. Stream word by word
+    def stream_text(text: str):
+        for word in text.split():
+            yield word + " "
+
+    return StreamingResponse(
+        stream_text(reply),
+        media_type="text/plain",
+        headers={"X-Session-ID": session_id}
+    )
+
+# ============================================
+# CLEANUP
+# ============================================
 
 @app.delete("/clear_data")
-async def clear_data():
-    """Clear all stored resume and job data."""
-    try:
-        save_memory({"resume_text": "", "job_description": ""})
-        return {
-            "message": "✅ All career data cleared successfully!",
-            "status": "empty"
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error clearing data: {str(e)}")
-
-
-@app.delete("/clear_all")
-async def clear_all():
-    """Clear both career data and market cache."""
-    try:
-        # Clear career data
-        save_memory({"resume_text": "", "job_description": ""})
-        
-        # Clear market cache
-        with open(CACHE_PATH, "w") as f:
-            json.dump({}, f)
-        
-        return {
-            "message": "✅ All data cleared (career + market cache)!",
-            "status": "empty"
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error clearing all data: {str(e)}")
+def clear_data():
+    save_memory({})
+    CHAT_MEMORY.clear()
+    return {"message": "All stored data cleared"}
 
 # ============================================
-# SERVER STARTUP
+# RUN
 # ============================================
 
 if __name__ == "__main__":
-    print("="*60)
-    print("🚀 Starting AI Career & Market Analysis Agent v3.0")
-    print("="*60)
-    print(f"✅ Career Agent: {'Ready' if career_agent else 'Not initialized'}")
-    print(f"✅ Market Agent: {'Ready' if market_agent else 'Not initialized'}")
-    print(f"✅ Roadmap Agent: {'Ready' if roadmap_agent else 'Not initialized'}")
-    print("="*60)
-    print("📚 API Documentation: http://localhost:8000/docs")
-    print("🔍 Health Check: http://localhost:8000/api/health")
-    print("="*60)
-    
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )

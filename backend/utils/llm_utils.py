@@ -2,6 +2,8 @@
 """LLM initialization and configuration utilities."""
 
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 import os
 
@@ -27,21 +29,52 @@ def get_llm(temperature: float = 0.1):
         raise ValueError("GEMINI_API_KEY not found in environment variables")
     
     return ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash-lite",
         temperature=temperature,
         google_api_key=api_key,
         convert_system_message_to_human=True
     )
-
-
-def get_creative_llm():
-    """
-    Get LLM configured for creative tasks like cover letter generation.
     
-    Returns:
-        ChatGoogleGenerativeAI instance with higher temperature
+
+
+
+def get_llm_openrouter(temperature: float = 0.1):
     """
-    return get_llm(temperature=0.7)
+    Initialize and return OpenRouter LLM using a free DeepSeek-based model.
+
+    Args:
+        temperature: Model temperature (default 0.1 for factual responses)
+
+    Returns:
+        ChatOpenAI instance
+    """
+    api_key = os.getenv("OPENROUTER_API_KEY")
+
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY not found in environment variables")
+
+    return ChatOpenAI(
+        model="google/gemini-2.0-flash-exp",
+        temperature=temperature,
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={
+            "HTTP-Referer": "http://localhost",   # can be your site/app later
+            "X-Title": "My LangChain App"
+        }
+    )
+    
+def get_llm_groq(temperature=0.2):
+    if not os.getenv("GROQ_API_KEY"):
+        raise RuntimeError("GROQ_API_KEY missing")
+
+    return ChatGroq(
+        model="llama-3.3-70b-versatile",
+        temperature=temperature,
+        max_tokens=800
+    )
+
+
 
 
 # ---------- SETTINGS HANDLER (REPLACING CLASS) ----------
@@ -57,7 +90,7 @@ def get_settings():
         "YOUTUBE_API_KEY": os.getenv("YOUTUBE_API_KEY"),
         
         # Model Settings
-        "GEMINI_MODEL": os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+        "GEMINI_MODEL": os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite"),
         "EMBEDDING_MODEL": os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"),
         
         # Vector Store Settings
