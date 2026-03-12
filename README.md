@@ -106,40 +106,40 @@ Routes every message to the right agent automatically:
 
 ```mermaid
 flowchart TD
-    A[👤 User Opens App] --> B{Choose Feature}
+    A[User Opens App] --> B{Choose Feature}
 
-    B --> C[📄 Job Analyzer]
-    B --> D[📊 Market Analyzer]
-    B --> E[🗺️ Roadmap]
-    B --> F[🤖 AI Chatbot]
+    B --> C[Job Analyzer]
+    B --> D[Market Analyzer]
+    B --> E[Roadmap Generator]
+    B --> F[AI Chatbot]
 
     C --> C1[Upload Resume PDF/DOCX]
     C1 --> C2[Paste Job Description]
-    C2 --> C3[🚀 Start Complete Analysis]
-    C3 --> C4[Gemini AI → LCEL Pipeline]
-    C4 --> C5[ATS Score + Skill Gap + Match %]
+    C2 --> C3[Start Complete Analysis]
+    C3 --> C4[Gemini AI - LCEL Pipeline]
+    C4 --> C5[ATS Score + Skill Gap + Match Percent]
     C5 --> C6[Cover Letter Generated]
-    C6 --> C7[✅ 4-Tab Results Dashboard]
+    C6 --> C7[4-Tab Results Dashboard]
 
     D --> D1[Enter Role + Location + Experience]
     D1 --> D2[SerpAPI Web Scraping]
     D2 --> D3[Groq LLaMA 3.3 Analysis]
-    D3 --> D4[💰 Salary + 📈 Demand + 🛠️ Skills]
+    D3 --> D4[Salary + Demand + Skills Report]
 
     E --> E1[Enter Career Goal + Duration]
-    E1 --> E2[RAG Store — FAISS Retrieval]
+    E1 --> E2[RAG Store - FAISS Retrieval]
     E2 --> E3[Gemini JSON Roadmap]
-    E3 --> E4[📅 Interactive Week Timeline]
-    E4 --> E5[📥 Download .txt]
+    E3 --> E4[Interactive Week Timeline]
+    E4 --> E5[Download as txt]
 
     F --> F1[User Types Message]
     F1 --> F2[Router Agent Classifies Intent]
     F2 --> F3{Intent?}
-    F3 --> F4[career_analysis → CareerAgent]
-    F3 --> F5[market_analysis → MarketAgent]
-    F3 --> F6[roadmap → RoadmapLLM]
-    F3 --> F7[general → Gemini Q&A]
-    F4 & F5 & F6 & F7 --> F8[💬 Streaming Reply]
+    F3 --> F4[career_analysis - CareerAgent]
+    F3 --> F5[market_analysis - MarketAgent]
+    F3 --> F6[roadmap - RoadmapLLM]
+    F3 --> F7[general - Gemini QnA]
+    F4 & F5 & F6 & F7 --> F8[Streaming Reply]
 ```
 
 ---
@@ -284,7 +284,7 @@ npm start
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/upload_resume` | Upload PDF/DOCX resume |
-| `POST` | `/analyze_resume` | Full analysis (ATS + skills +match) |
+| `POST` | `/analyze_resume` | Full analysis (ATS + skills + match) |
 | `POST` | `/generate_cover_letter` | AI cover letter |
 | `POST` | `/api/market_analysis` | Market insights for a role |
 | `POST` | `/api/get_roadmap` | Week-by-week learning roadmap |
