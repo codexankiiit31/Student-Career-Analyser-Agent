@@ -1,538 +1,353 @@
-# 🎯 AI Career Agent
+<div align="center">
 
-> An intelligent multi-agent system that helps students optimize their resumes, analyze job markets, and plan their career roadmap using AI-powered insights.
+<img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=700&size=40&duration=3000&pause=1000&color=A855F7&center=true&vCenter=true&width=700&lines=🧠+AI+Career+Agent;Your+Career%2C+Unlocked+🚀;Land+Your+Dream+Job+Faster" alt="Typing SVG" />
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
-[![LangChain](https://img.shields.io/badge/LangChain-LCEL-green.svg)](https://www.langchain.com/)
-[![Gemini API](https://img.shields.io/badge/Gemini-API-orange.svg)](https://ai.google.dev/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<br/>
 
----
+<p align="center">
+  <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" />
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+  <img src="https://img.shields.io/badge/Google_Gemini-8E44AD?style=for-the-badge&logo=google&logoColor=white" />
+  <img src="https://img.shields.io/badge/Groq_LLaMA-FF6B35?style=for-the-badge&logo=meta&logoColor=white" />
+  <img src="https://img.shields.io/badge/LangChain-121212?style=for-the-badge&logo=chainlink&logoColor=white" />
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+</p>
 
-## 📋 Table of Contents
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Active-10b981?style=flat-square" />
+  <img src="https://img.shields.io/badge/License-MIT-a855f7?style=flat-square" />
+  <img src="https://img.shields.io/badge/PRs-Welcome-ec4899?style=flat-square" />
+  <img src="https://img.shields.io/badge/Made%20with-%E2%9D%A4-red?style=flat-square" />
+</p>
 
-- [Overview](#-overview)
-- [Problem Statement](#-problem-statement)
-- [Features](#-features)
-- [System Architecture](#-system-architecture)
-- [Agent Details](#-agent-details)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Tech Stack](#-tech-stack)
-- [API Documentation](#-api-documentation)
-- [Screenshots](#-screenshots)
-- [Future Enhancements](#-future-enhancements)
-- [Contributing](#-contributing)
-- [License](#-license)
+<br/>
 
----
+> **AI Career Agent** is a full-stack intelligent career platform built for Gen Z students and early-career professionals. Upload your resume, drop a job description, and let AI do the heavy lifting — ATS scores, skill gap analysis, market insights, personalized roadmaps, and a built-in career chatbot.
 
-## 🌟 Overview
-
-**AI Career Agent** is a comprehensive career guidance platform powered by multiple AI agents that work together to provide students with actionable insights for their job search journey. The system analyzes resumes, matches them with job descriptions, provides ATS optimization suggestions, generates personalized cover letters, analyzes market trends, and creates customized learning roadmaps.
+</div>
 
 ---
 
-## 🎯 Problem Statement
+## ✨ Features at a Glance
 
-Students face significant challenges in the job application process:
+<table>
+<tr>
+<td width="50%">
 
-- **Resume shortlisting failures** due to poor ATS compatibility
-- **Lack of insight** into why their applications are rejected
-- **Uncertainty** about skill gaps and market demands
-- **No clear roadmap** for skill development
-- **Difficulty** in crafting compelling cover letters
+### 📄 Resume & Job Analyzer
+- **ATS Score** — instant compatibility check
+- **Skill Gap Analysis** — matching vs missing skills
+- **Match Percentage** — resume ↔ job alignment
+- **Selection Probability** — AI-powered hiring chance
 
-**AI Career Agent** solves these problems through intelligent automation and data-driven insights.
+</td>
+<td width="50%">
+
+### 💼 Cover Letter Generator
+- Tailored to the job description
+- Professional tone with customization
+- Copy, Download & Print directly
+- Uses your real resume context
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 📊 Market Intelligence
+- Salary ranges (India 🇮🇳 + Global 🌍)
+- Current demand level & future scope
+- Core, tools, nice-to-have & declining skills
+- Powered by live web scraping + Groq LLaMA
+
+</td>
+<td width="50%">
+
+### 🗺️ Learning Roadmap
+- Week-by-week interactive timeline
+- Phase breakdown (Beginner → Advanced)
+- Mini-projects for each week
+- Pro tips + expected outcomes
+- Download as `.txt`
+
+</td>
+</tr>
+<tr>
+<td colspan="2">
+
+### 🧠 Unified AI Chatbot (bottom-right widget)
+Routes every message to the right agent automatically:
+`Resume Q&A` → `Market Lookup` → `Roadmap Preview` → `General Career Q&A`
+
+</td>
+</tr>
+</table>
 
 ---
 
-## ✨ Features
+## 🏗️ App Architecture
 
-### 🔍 Agent 1: Job Analyzer Agent
-
-#### 1. **Resume Parsing**
-- Extracts technical skills, soft skills, and competencies
-- Analyzes years of experience and education details
-- Identifies key achievements and projects
-- Maps industry experience and leadership roles
-
-#### 2. **Job Description Parsing**
-- Extracts required technical and soft skills
-- Identifies experience and education requirements
-- Analyzes company culture indicators
-- Determines job level (entry/mid/senior)
-
-#### 3. **Match Analysis**
-- **Overall Match Percentage**: Calculates compatibility score
-- **Selection Probability**: Predicts chances of getting shortlisted
-- **Skill Gap Analysis**: Identifies matching and missing skills
-- **Evidence-Based Insights**: Provides specific examples from resume
-
-#### 4. **ATS Optimization**
-- **ATS Score**: Measures resume compatibility with ATS systems
-- **Missing Keywords**: Identifies critical keywords to add
-- **Keyword Density Analysis**: Suggests optimal keyword frequency
-- **Formatting Recommendations**: Provides section-wise improvement suggestions
-- **Section Organization**: Recommends better structure
-
-#### 5. **Cover Letter Generation**
-- Creates personalized 250-300 word cover letters
-- Includes compelling opening hooks and call-to-action
-- Maps resume achievements to job requirements
-- Highlights cultural alignment with company
-
----
-
-### 📊 Agent 2: Market Analysis Agent
-
-#### Features:
-- **Web Scraping**: Collects real-time market data for specific roles
-- **Skill Analysis**: Identifies core skills, tools, and nice-to-have skills
-- **Declining Skills**: Highlights outdated technologies to avoid
-- **Career Growth Insights**: Analyzes current demand and future scope
-- **Salary Information**: Provides salary ranges for India and abroad (fresher/mid/senior levels)
-- **Career Advice**: Offers practical guidance for students
-
-**Example Output:**
-```json
-{
-  "career": "Full Stack Developer",
-  "skills": {
-    "core": ["HTML", "CSS", "JavaScript"],
-    "tools": ["React", "Node.js", "MongoDB", "Git"],
-    "nice_to_have": ["Docker", "Cloud platforms"]
-  },
-  "declining_skills": [
-    "Traditional jQuery-heavy development is becoming less relevant"
-  ],
-  "career_growth": {
-    "current_demand": "High",
-    "future_scope": "Positive due to continued growth of web-based platforms"
-  },
-  "salary": {
-    "india": {
-      "fresher": "4–8 LPA",
-      "mid": "10–18 LPA",
-      "senior": "25+ LPA"
-    },
-    "abroad": {
-      "fresher": "$70,000",
-      "mid": "$100,000",
-      "senior": "$150,000"
-    }
-  }
-}
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        USER (Browser)                           │
+│                   React Frontend (Port 3000)                    │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────┐ │
+│  │Dashboard │ │  Job     │ │ Market   │ │ Roadmap  │ │ Chat │ │
+│  │ (Bento) │ │Analyzer  │ │Analyzer  │ │Generator │ │Widget│ │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────┘ │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │  HTTP / Streaming (REST API)
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    FastAPI Backend (Port 8000)                   │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │                     API Endpoints                          │ │
+│  │  POST /upload_resume   POST /analyze_resume                │ │
+│  │  POST /generate_cover_letter   POST /api/market_analysis   │ │
+│  │  POST /api/get_roadmap   POST /api/chat                    │ │
+│  └──────────┬──────────┬───────────┬─────────────┬───────────┘ │
+│             │          │           │             │             │
+│      ┌──────▼──┐ ┌─────▼──┐ ┌─────▼───┐ ┌──────▼──────┐     │
+│      │ Career  │ │ Market │ │ Roadmap │ │  Chatbot    │     │
+│      │  Agent  │ │ Agent  │ │   LLM   │ │  Router     │     │
+│      │(Gemini) │ │(Groq)  │ │(Gemini) │ │  Agent      │     │
+│      └──────┬──┘ └─────┬──┘ └───┬─────┘ └──────┬──────┘     │
+│             │          │        │               │             │
+│      ┌──────▼──────────▼────────▼───────────────▼──────────┐ │
+│      │          LangChain LCEL Pipelines                    │ │
+│      │   Pydantic Models │ RAG (FAISS) │ Web Scraping       │ │
+│      └──────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### 🗺️ Agent 3: Roadmap Agent
+## 🔄 Working Workflow
 
-#### Features:
-- **Web Scraping**: Gathers comprehensive learning resources for specific roles
-- **RAG Pipeline**: Uses Retrieval-Augmented Generation for accurate roadmap creation
-- **Personalized Learning Path**: Creates step-by-step career development roadmap
-- **Resource Recommendations**: Suggests courses, tutorials, and certifications
-- **Timeline Estimation**: Provides realistic learning timelines
+```mermaid
+flowchart TD
+    A[👤 User Opens App] --> B{Choose Feature}
 
----
+    B --> C[📄 Job Analyzer]
+    B --> D[📊 Market Analyzer]
+    B --> E[🗺️ Roadmap]
+    B --> F[🤖 AI Chatbot]
 
-## 🏗️ System Architecture
+    C --> C1[Upload Resume PDF/DOCX]
+    C1 --> C2[Paste Job Description]
+    C2 --> C3[🚀 Start Complete Analysis]
+    C3 --> C4[Gemini AI → LCEL Pipeline]
+    C4 --> C5[ATS Score + Skill Gap + Match %]
+    C5 --> C6[Cover Letter Generated]
+    C6 --> C7[✅ 4-Tab Results Dashboard]
 
+    D --> D1[Enter Role + Location + Experience]
+    D1 --> D2[SerpAPI Web Scraping]
+    D2 --> D3[Groq LLaMA 3.3 Analysis]
+    D3 --> D4[💰 Salary + 📈 Demand + 🛠️ Skills]
+
+    E --> E1[Enter Career Goal + Duration]
+    E1 --> E2[RAG Store — FAISS Retrieval]
+    E2 --> E3[Gemini JSON Roadmap]
+    E3 --> E4[📅 Interactive Week Timeline]
+    E4 --> E5[📥 Download .txt]
+
+    F --> F1[User Types Message]
+    F1 --> F2[Router Agent Classifies Intent]
+    F2 --> F3{Intent?}
+    F3 --> F4[career_analysis → CareerAgent]
+    F3 --> F5[market_analysis → MarketAgent]
+    F3 --> F6[roadmap → RoadmapLLM]
+    F3 --> F7[general → Gemini Q&A]
+    F4 & F5 & F6 & F7 --> F8[💬 Streaming Reply]
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Frontend (UI)                        │
-│         Dashboard | Job Analyzer | Market | Roadmap     │
-└────────────────────────┬────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│                  LangChain LCEL Pipeline                │
-└─────────┬───────────────┬───────────────┬───────────────┘
-          │               │               │
-          ▼               ▼               ▼
-┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-│   Agent 1   │  │   Agent 2   │  │   Agent 3   │
-│     Job     │  │   Market    │  │   Roadmap   │
-│   Analyzer  │  │   Analysis  │  │   Creator   │
-└──────┬──────┘  └──────┬──────┘  └──────┬──────┘
-       │                │                │
-       │                ▼                │
-       │         ┌─────────────┐         │
-       │         │ Web Scraper │         │
-       │         └─────────────┘         │
-       │                                 │
-       ▼                                 ▼
-┌─────────────┐                  ┌─────────────┐
-│  Gemini AI  │                  │ RAG Pipeline│
-│     LLM     │                  │   Vector DB │
-└─────────────┘                  └─────────────┘
-```
-
----
-
-## 🤖 Agent Details
-
-### Agent 1: Job Analyzer Agent
-
-**Purpose**: Analyzes resumes and job descriptions to provide comprehensive matching insights.
-
-**Workflow**:
-1. **Input**: User uploads resume (PDF/DOCX) and job description
-2. **Resume Parsing**: LLM extracts structured data using Pydantic output parser
-3. **Job Description Parsing**: LLM extracts job requirements in JSON format
-4. **Match Analysis**: Senior ATS engine evaluates compatibility
-5. **Output**: Match scores, skill gaps, ATS recommendations, and cover letter
-
-**Key Prompts**:
-
-#### Resume Parsing Prompt:
-```
-Analyze this resume and provide a detailed JSON with:
-1. Technical skills
-2. Soft skills
-3. Years of experience
-4. Education details
-5. Key achievements
-6. Core competencies
-7. Industry experience
-8. Leadership experience
-9. Technologies used
-10. Projects completed
-
-IMPORTANT: Respond ONLY with valid JSON format, no additional text.
-```
-
-#### Match Analysis Prompt:
-```
-You are a senior ATS engine, resume evaluator, and job-match scoring expert.
-Analyze the provided resume and job description and generate a complete JSON evaluation.
-
-IMPORTANT RULES:
-• Respond ONLY with a valid JSON object
-• DO NOT invent experience, skills, or facts not found in the resume
-• All judgments must be evidence-based
-• Provide only essential insights
-```
-
-**Output Metrics**:
-- Overall Match Percentage (0-100%)
-- Selection Probability (0-100%)
-- Matching Skills vs Missing Skills ratio
-- ATS Compatibility Score (0-100%)
-
----
-
-### Agent 2: Market Analysis Agent
-
-**Purpose**: Provides real-time career market insights and salary trends.
-
-**Workflow**:
-1. **Input**: User enters desired job role (e.g., "Java Developer")
-2. **Web Scraping**: Collects data from multiple job portals and career sites
-3. **Data Processing**: LLM analyzes raw market text
-4. **Output**: Structured insights on skills, demand, salary, and career advice
-
-**Key Prompt**:
-```
-You are a career market analyst helping students understand real-world career trends.
-
-RULES (IMPORTANT):
-- Use ONLY the information present in the RAW market text
-- Do NOT use outside knowledge
-- Be honest, realistic, and conservative
-- Output MUST be valid JSON only
-```
-
-**Analysis Categories**:
-- **Core Skills**: Fundamental skills repeatedly emphasized
-- **Tools & Technologies**: Frameworks and platforms mentioned
-- **Nice-to-Have Skills**: Optional secondary skills
-- **Declining Skills**: Outdated technologies losing relevance
-- **Career Growth**: Current demand (High/Medium/Low) and future scope
-- **Salary Ranges**: India and abroad, across experience levels
-
----
-
-### Agent 3: Roadmap Agent
-
-**Purpose**: Creates personalized learning roadmaps with curated resources.
-
-**Workflow**:
-1. **Input**: User requests roadmap for specific role
-2. **Web Scraping**: Gathers learning resources, courses, and best practices
-3. **RAG Pipeline**: Stores and retrieves relevant information
-4. **LLM Generation**: Creates structured learning path
-5. **Output**: Step-by-step roadmap with resources and timeline
-
-**Features**:
-- Skill progression from beginner to advanced
-- Recommended courses and certifications
-- Project ideas for portfolio building
-- Estimated learning timelines
-- Community resources and forums
-
----
-
-## 🚀 Installation
-
-### Prerequisites
-
-- Python 3.8 or higher
-- pip package manager
-- Gemini API key
-
-### Step 1: Clone the Repository
-
-```bash
-git clone https://github.com/yourusername/ai-career-agent.git
-cd ai-career-agent
-```
-
-### Step 2: Create Virtual Environment
-
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-### Step 3: Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### Step 4: Set Up Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-### Step 5: Run the Application
-
-```bash
-python app.py
-```
-
-Navigate to `http://localhost:3000` in your browser.
-
----
-
-## 💻 Usage
-
-### 1. Job Analyzer
-
-**Step 1**: Navigate to the **Job Analyzer** tab
-
-**Step 2**: Upload your resume (PDF/DOCX format)
-
-**Step 3**: Paste the job description
-
-**Step 4**: Click **Analyze**
-
-**Step 5**: Review results across four tabs:
-- **Skills Analysis**: See matching and missing skills
-- **ATS Optimization**: Get ATS score and improvement suggestions
-- **Cover Letter**: Download personalized cover letter
-
-### 2. Market Analyzer
-
-**Step 1**: Navigate to the **Market Analyzer** tab
-
-**Step 2**: Enter job role (e.g., "Data Scientist")
-
-**Step 3**: Click **Analyze Market**
-
-**Step 4**: Review insights on:
-- Required skills and tools
-- Salary ranges
-- Career growth potential
-- Expert advice
-
-### 3. Roadmap Generator
-
-**Step 1**: Navigate to the **Roadmap** tab
-
-**Step 2**: Enter your target role
-
-**Step 3**: Click **Generate Roadmap**
-
-**Step 4**: Explore personalized learning path with resources
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Backend
-- **Python 3.8+**: Core programming language
-- **LangChain**: LCEL pipeline for agent orchestration
-- **Pydantic**: Structured output parsing
-- **Gemini API**: LLM for intelligent analysis
-- **BeautifulSoup/Scrapy**: Web scraping
-
-### Frontend
-- **React.js**: UI framework
-- **Tailwind CSS**: Styling
-- **Axios**: HTTP client
-
-### AI/ML
-- **LangChain LCEL**: Chain orchestration
-- **Google Gemini**: Language model
-- **RAG Pipeline**: Vector database for roadmap generation
-- **JSON Output Parsers**: Structured data extraction
-
-### Database
-- **Vector Database**: For RAG pipeline (Roadmap Agent)
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 18, React Router, Framer Motion, Lucide React |
+| **Styling** | Vanilla CSS (Space Grotesk + Inter fonts, glassmorphism) |
+| **Backend** | Python 3.11+, FastAPI, Uvicorn |
+| **LLMs** | Google Gemini (primary), Groq LLaMA 3.3 (market) |
+| **AI Framework** | LangChain LCEL, Pydantic v2, PydanticOutputParser |
+| **RAG Pipeline** | FAISS vector store, LangChain text splitters |
+| **Web Scraping** | SerpAPI, BeautifulSoup4, httpx |
+| **Notifications** | React Toastify |
+| **State** | React useState/useEffect (no Redux) |
+| **Streaming** | FastAPI StreamingResponse → Fetch ReadableStream |
 
 ---
 
-## 📡 API Documentation
+## 📁 Project Structure
 
-### Endpoint: `/analyze-job`
-
-**Method**: `POST`
-
-**Request Body**:
-```json
-{
-  "resume": "base64_encoded_resume",
-  "job_description": "Full job description text"
-}
 ```
-
-**Response**:
-```json
-{
-  "summary": {
-    "overall_match_percentage": 65,
-    "selection_probability": 70
-  },
-  "match_analysis": {
-    "matching_skills": [...],
-    "missing_skills": [...]
-  },
-  "ats_optimization": {
-    "ats_score": 75,
-    "missing_keywords": {...}
-  },
-  "cover_letter": "Generated cover letter text..."
-}
-```
-
-### Endpoint: `/analyze-market`
-
-**Method**: `POST`
-
-**Request Body**:
-```json
-{
-  "job_role": "Full Stack Developer"
-}
-```
-
-**Response**:
-```json
-{
-  "career": "Full Stack Developer",
-  "skills": {...},
-  "salary": {...},
-  "career_growth": {...}
-}
+AI Career Agent/
+├── 📂 backend/
+│   ├── main.py                   # FastAPI app + all endpoints
+│   ├── .env                      # API keys (never commit!)
+│   ├── 📂 agents/
+│   │   ├── job_anayzer_agent.py  # CareerAgent (LCEL + Pydantic)
+│   │   ├── market_insights_agent.py
+│   │   ├── Roadmap_agent.py      # RAG + JSON roadmap
+│   │   └── chatbot_router_agent.py  # Intent classifier + responder
+│   ├── 📂 prompts/
+│   │   ├── roadmap_prompt.txt    # JSON-structured
+│   │   ├── chatbot_router_prompt.txt
+│   │   ├── market_prompts.txt
+│   │   └── job_anaylzer/         # unified, ats, cover_letter prompts
+│   ├── 📂 scraping/
+│   │   └── market_insights_scraping.py
+│   ├── 📂 rag_Store/
+│   │   └── ingest_roadmap.py     # FAISS ingestion
+│   └── 📂 utils/
+│       ├── llm_utils.py
+│       ├── rag_chain.py
+│       └── response_formetter.py
+│
+└── 📂 frontend/
+    ├── 📂 src/
+    │   ├── App.js                # Router + ChatWidget global
+    │   ├── App.css               # Global design system tokens
+    │   ├── 📂 pages/
+    │   │   ├── Dashboard.jsx     # Bento grid landing
+    │   │   ├── JobAnalyzer.jsx   # 4-tab analyzer
+    │   │   ├── MarketAnalyzer.jsx
+    │   │   └── RoadMap.jsx       # Interactive timeline
+    │   ├── 📂 components/
+    │   │   ├── Navbar/
+    │   │   ├── ChatWidget/       # Floating AI chatbot
+    │   │   ├── ResumeUploader/
+    │   │   ├── JobDescriptionForm/
+    │   │   ├── SkillsAnalysis/
+    │   │   ├── ATSRecommendations/
+    │   │   └── CoverLetterGenerator/
+    │   └── 📂 Styles/            # Dark theme CSS per page
+    └── package.json
 ```
 
 ---
 
-## 📸 Screenshots
+## 🚀 Quick Start
 
-### Job Analyzer - Skills Analysis
+### Prerequisites
 
-- Overall Match: **65%**
-- Selection Probability: **70%**
-- Matching vs Missing Skills: **9/7**
+- **Python 3.11+**
+- **Node.js 18+**
+- API keys: `GEMINI_API_KEY`, `GROQ_API_KEY`, `SERPAPI_API_KEY`
 
-### ATS Optimization
+### 1️⃣ Clone the repo
 
-- ATS Compatibility Score: **75%**
-- Missing keywords categorized by type
-- Actionable recommendations
+```bash
+git clone https://github.com/ankiiitraj/AI-Career-Agent.git
+cd "AI Career Agent"
+```
 
-### Cover Letter Generator
+### 2️⃣ Backend Setup
 
-- Professional 268-word cover letter
-- Copy, Download, and Print options
-- Personalized based on resume and job description
+```bash
+cd backend
+
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate        # Windows
+source venv/bin/activate     # macOS/Linux
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create .env file
+```
+
+Create `backend/.env`:
+```env
+GEMINI_API_KEY=your_gemini_key_here
+GROQ_API_KEY=your_groq_key_here
+SERPAPI_API_KEY=your_serpapi_key_here   # Optional — for live market data
+```
+
+```bash
+# Start backend
+cd backend
+uvicorn main:app --reload --port 8000
+```
+
+> ✅ Backend running at `http://localhost:8000`  
+> 📖 API docs at `http://localhost:8000/docs`
+
+### 3️⃣ Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+> ✅ Frontend running at `http://localhost:3000`
 
 ---
 
-## 🔮 Future Enhancements
+## 🔑 API Keys Guide
 
-- [ ] **Multi-language support** for global users
-- [ ] **Interview preparation module** with mock interviews
-- [ ] **Resume builder** with ATS-optimized templates
-- [ ] **LinkedIn profile optimization**
-- [ ] **Job application tracker**
-- [ ] **Salary negotiation insights**
-- [ ] **Skill assessment tests**
-- [ ] **Company culture analysis**
-- [ ] **Networking recommendations**
-- [ ] **Chrome extension** for one-click job analysis
+| Key | Where to Get | Required? |
+|-----|-------------|-----------|
+| `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/app/apikey) | ✅ Yes |
+| `GROQ_API_KEY` | [console.groq.com](https://console.groq.com) | ✅ Yes |
+| `SERPAPI_API_KEY` | [serpapi.com](https://serpapi.com) | ⚡ Optional (market data) |
+
+---
+
+## 📡 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/upload_resume` | Upload PDF/DOCX resume |
+| `POST` | `/analyze_resume` | Full analysis (ATS + skills +match) |
+| `POST` | `/generate_cover_letter` | AI cover letter |
+| `POST` | `/api/market_analysis` | Market insights for a role |
+| `POST` | `/api/get_roadmap` | Week-by-week learning roadmap |
+| `POST` | `/api/chat` | Unified AI chatbot (streaming) |
+| `GET`  | `/health` | Backend health check |
+| `DELETE` | `/clear_data` | Wipe all stored data |
+
+---
+
+## 🎨 UI Design System
+
+The frontend uses a custom **Gen Z dark theme**:
+
+- 🎨 **Colours** — Neon purple `#7c3aed`, hot pink `#ec4899`, electric cyan `#06b6d4`
+- 🪟 **Glassmorphism** — `rgba(255,255,255,0.04)` cards with blur
+- ✨ **Aurora BG** — radial gradient blobs behind all pages
+- 🅰️ **Fonts** — `Space Grotesk` (headings) + `Inter` (body)
+- 💫 **Animations** — Framer Motion page transitions, Lucide icons
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/AmazingFeature`
-3. **Commit your changes**: `git commit -m 'Add some AmazingFeature'`
-4. **Push to the branch**: `git push origin feature/AmazingFeature`
-5. **Open a Pull Request**
-
-### Contribution Guidelines
-
-- Follow PEP 8 style guide for Python code
-- Write clear commit messages
-- Add tests for new features
-- Update documentation as needed
+1. Fork the repo
+2. Create a feature branch: `git checkout -b feature/amazing-thing`
+3. Commit changes: `git commit -m 'feat: add amazing thing'`
+4. Push: `git push origin feature/amazing-thing`
+5. Open a Pull Request 🎉
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
-
-
-
-## 🙏 Acknowledgments
-
-- **Google Gemini** for providing powerful LLM capabilities
-- **LangChain** for the excellent framework
-- **Open source community** for various libraries and tools
-
----
-
-## 📞 Contact
-
-For questions or support, please reach out:
-
-- **Email**: your.email@example.com
-- **LinkedIn**: [Your Profile](https://linkedin.com/in/yourprofile)
-- **GitHub**: [@yourusername](https://github.com/yourusername)
-
----
-
-
 
 <div align="center">
 
+Made with 💜 by **Ankit** · Powered by **Google Gemini** + **Groq LLaMA** + **LangChain**
 
+<br/>
 
-[Report Bug](https://github.com/yourusername/ai-career-agent/issues) · [Request Feature](https://github.com/yourusername/ai-career-agent/issues)
+⭐ **If this helped you, drop a star!** ⭐
 
 </div>
