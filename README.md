@@ -1,37 +1,20 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=Syne&weight=800&size=56&duration=2800&pause=1200&color=7C3AED&center=true&vCenter=true&width=780&lines=🧠+AI+Career+Agent;Your+Career%2C+Unlocked+✦;Land+Your+Dream+Job+Faster+🚀" alt="AI Career Agent" />
+# AI Career Agent
 
-<br/>
-
-<img src="https://readme-typing-svg.demolab.com?font=Lora&size=20&duration=4000&pause=2000&color=06B6D4&center=true&vCenter=true&width=640&lines=Full-stack+AI+platform+for+Gen+Z+%26+early-career+professionals" alt="tagline" />
-
-<br/><br/>
-
-<img src="https://img.shields.io/badge/FastAPI-00D084?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=0d1220" />
-<img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=white&labelColor=0d1220" />
-<img src="https://img.shields.io/badge/Google_Gemini-A78BFA?style=for-the-badge&logo=google&logoColor=white&labelColor=0d1220" />
-<img src="https://img.shields.io/badge/Groq_LLaMA-FB923C?style=for-the-badge&logo=meta&logoColor=white&labelColor=0d1220" />
-<img src="https://img.shields.io/badge/LangChain-34D399?style=for-the-badge&logo=chainlink&logoColor=white&labelColor=0d1220" />
-<img src="https://img.shields.io/badge/Python-FBBF24?style=for-the-badge&logo=python&logoColor=white&labelColor=0d1220" />
-
-<br/><br/>
-
-<img src="https://img.shields.io/badge/Status-Active-10b981?style=flat-square&labelColor=0d1220" />
-&nbsp;
-<img src="https://img.shields.io/badge/License-MIT-a855f7?style=flat-square&labelColor=0d1220" />
-&nbsp;
-<img src="https://img.shields.io/badge/PRs-Welcome-ec4899?style=flat-square&labelColor=0d1220" />
-&nbsp;
-<img src="https://img.shields.io/badge/Made_with-Love_💜-ef4444?style=flat-square&labelColor=0d1220" />
-
-<br/><br/>
-
-<p><strong>AI Career Agent</strong> is a full-stack intelligent career platform built for Gen Z students and early-career professionals.<br/>
-Upload your resume, drop a job description, and let AI do the heavy lifting —<br/>
-ATS scores &nbsp;·&nbsp; Skill gap analysis &nbsp;·&nbsp; Market insights &nbsp;·&nbsp; Personalized roadmaps &nbsp;·&nbsp; Career chatbot</p>
+### An AI-powered platform to analyze resumes and improve career readiness
 
 </div>
+
+AI Career Agent helps users evaluate their resume against job descriptions and get actionable insights to improve their chances of landing a job.
+
+Upload a resume and a job description to receive:
+
+- ATS score
+- Skill gap analysis
+- Career insights
+- Personalized learning roadmap
+- AI career assistant for guidance
 
 ---
 
