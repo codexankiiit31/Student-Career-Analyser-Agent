@@ -113,21 +113,21 @@ flowchart TD
     B --> E[Roadmap Generator]
     B --> F[AI Chatbot]
 
-    C --> C1[Upload Resume PDF/DOCX]
+    C --> C1[Upload Resume PDF or DOCX]
     C1 --> C2[Paste Job Description]
     C2 --> C3[Start Complete Analysis]
-    C3 --> C4[Gemini AI - LCEL Pipeline]
-    C4 --> C5[ATS Score + Skill Gap + Match Percent]
+    C3 --> C4[Gemini AI via LCEL Pipeline]
+    C4 --> C5[ATS Score plus Skill Gap plus Match Percent]
     C5 --> C6[Cover Letter Generated]
     C6 --> C7[4-Tab Results Dashboard]
 
-    D --> D1[Enter Role + Location + Experience]
+    D --> D1[Enter Role, Location, Experience]
     D1 --> D2[SerpAPI Web Scraping]
     D2 --> D3[Groq LLaMA 3.3 Analysis]
-    D3 --> D4[Salary + Demand + Skills Report]
+    D3 --> D4[Salary, Demand, Skills Report]
 
-    E --> E1[Enter Career Goal + Duration]
-    E1 --> E2[RAG Store - FAISS Retrieval]
+    E --> E1[Enter Career Goal and Duration]
+    E1 --> E2[RAG Store FAISS Retrieval]
     E2 --> E3[Gemini JSON Roadmap]
     E3 --> E4[Interactive Week Timeline]
     E4 --> E5[Download as txt]
@@ -139,7 +139,10 @@ flowchart TD
     F3 --> F5[market_analysis - MarketAgent]
     F3 --> F6[roadmap - RoadmapLLM]
     F3 --> F7[general - Gemini QnA]
-    F4 & F5 & F6 & F7 --> F8[Streaming Reply]
+    F4 --> F8[Streaming Reply]
+    F5 --> F8
+    F6 --> F8
+    F7 --> F8
 ```
 
 ---
