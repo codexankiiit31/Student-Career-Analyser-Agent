@@ -8,7 +8,6 @@
 
 
 ---
-
 ## ✨ Features at a Glance
 
 <table>
@@ -238,22 +237,24 @@ source venv/bin/activate     # macOS/Linux
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Create .env file
 ```
 
 Create `backend/.env`:
-
 ```env
 GEMINI_API_KEY=your_gemini_key_here
 GROQ_API_KEY=your_groq_key_here
-SERPAPI_API_KEY=your_serpapi_key_here
+SERPAPI_API_KEY=your_serpapi_key_here   # Optional — for live market data
 ```
 
 ```bash
 # Start backend
+cd backend
 uvicorn main:app --reload --port 8000
 ```
 
-> ✅ Backend running at `http://localhost:8000`
+> ✅ Backend running at `http://localhost:8000`  
 > 📖 API docs at `http://localhost:8000/docs`
 
 ### 3️⃣ Frontend Setup
@@ -274,7 +275,7 @@ npm start
 |-----|-------------|-----------|
 | `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/app/apikey) | ✅ Yes |
 | `GROQ_API_KEY` | [console.groq.com](https://console.groq.com) | ✅ Yes |
-| `SERPAPI_API_KEY` | [serpapi.com](https://serpapi.com) | ⚡ Optional |
+| `SERPAPI_API_KEY` | [serpapi.com](https://serpapi.com) | ⚡ Optional (market data) |
 
 ---
 
@@ -283,7 +284,7 @@ npm start
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/upload_resume` | Upload PDF/DOCX resume |
-| `POST` | `/analyze_resume` | Full analysis (ATS + skills + match) |
+| `POST` | `/analyze_resume` | Full analysis (ATS + skills +match) |
 | `POST` | `/generate_cover_letter` | AI cover letter |
 | `POST` | `/api/market_analysis` | Market insights for a role |
 | `POST` | `/api/get_roadmap` | Week-by-week learning roadmap |
@@ -324,5 +325,9 @@ MIT License — see [LICENSE](LICENSE) for details.
 <div align="center">
 
 Made with 💜 by **Ankit** · Powered by **Google Gemini** + **Groq LLaMA** + **LangChain**
+
+<br/>
+
+⭐ **If this helped you, drop a star!** ⭐
 
 </div>
