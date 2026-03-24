@@ -1,25 +1,34 @@
-# 🤖 AI Career Agent — Student Career Analyser
+<div align="center">
 
-<p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Space+Grotesk&weight=700&size=40&duration=3000&pause=1000&color=A855F7&center=true&vCenter=true&width=700&lines=🧑‍🚀+AI+Career+Agent;Your+Career%2C+Unlocked+🚀;Land+Your+Dream+Job+Faster" alt="Typing SVG" />
-</p>
+```
+ █████╗ ██╗     ██████╗ █████╗ ██████╗ ███████╗███████╗██████╗      █████╗  ██████╗ ███████╗███╗   ██╗████████╗
+██╔══██╗██║    ██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗    ██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝
+███████║██║    ██║     ███████║██████╔╝█████╗  █████╗  ██████╔╝    ███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║   
+██╔══██║██║    ██║     ██╔══██║██╔══██╗██╔══╝  ██╔══╝  ██╔══██╗    ██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║   
+██║  ██║██║    ╚██████╗██║  ██║██║  ██║███████╗███████╗██║  ██║    ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   
+╚═╝  ╚═╝╚═╝     ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝    ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   
+```
 
-<p align="center">
-  <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" />
-  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
-  <img src="https://img.shields.io/badge/Google_Gemini-8E44AD?style=for-the-badge&logo=google&logoColor=white" />
-  <img src="https://img.shields.io/badge/Groq_LLaMA-FF6B35?style=for-the-badge&logo=meta&logoColor=white" />
-  <img src="https://img.shields.io/badge/LangChain-121212?style=for-the-badge&logo=chainlink&logoColor=white" />
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
-</p>
+### 🚀 Your AI-Powered Career Intelligence Platform
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Status-Active-10b981?style=flat-square" />
-  <img src="https://img.shields.io/badge/License-MIT-a855f7?style=flat-square" />
-  <img src="https://img.shields.io/badge/PRs-Welcome-ec4899?style=flat-square" />
-  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white" />
-</p>
+*Upload Resume → Get ATS Score → Land Your Dream Job*
+
+---
+
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
+[![Groq LLaMA](https://img.shields.io/badge/Groq_LLaMA_3.3-FF6B35?style=for-the-badge&logo=meta&logoColor=white)](https://groq.com)
+[![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain.com)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+
+[![Status](https://img.shields.io/badge/Status-Active-10b981?style=flat-square)](https://github.com/codexankiiit31/Student-Career-Analyser-Agent)
+[![License](https://img.shields.io/badge/License-MIT-a855f7?style=flat-square)](./LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-ec4899?style=flat-square)](https://github.com/codexankiiit31/Student-Career-Analyser-Agent/pulls)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+
+</div>
 
 ---
 
