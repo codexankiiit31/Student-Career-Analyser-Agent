@@ -1,25 +1,19 @@
-<div align="center">
-
-<h1>
-  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Robot.png" alt="Robot" width="60" height="60" />
-  <br/>
-  AI Career Agent
-  <br/>
-  <sub><sup>Student Career Analyser</sup></sub>
-</h1>
-
-<h3>🚀 Upload Resume → Get ATS Score → Land Your Dream Job</h3>
-
-<p>
-  <a href="https://fastapi.tiangolo.com"><img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" alt="FastAPI"/></a>
-  <a href="https://react.dev"><img src="https://img.shields.io/badge/React_18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React"/></a>
-  <a href="https://ai.google.dev"><img src="https://img.shields.io/badge/Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini"/></a>
-  <a href="https://groq.com"><img src="https://img.shields.io/badge/Groq_LLaMA_3.3-FF6B35?style=for-the-badge&logo=meta&logoColor=white" alt="Groq"/></a>
-  <a href="https://langchain.com"><img src="https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=chainlink&logoColor=white" alt="LangChain"/></a>
-  <a href="https://docker.com"><img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/></a>
+<p align="center">
+  <a href="https://github.com/codexankiiit31/Student-Career-Analyser-Agent">
+    <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=700&size=35&pause=1000&color=A855F7&center=true&vCenter=true&width=700&height=80&lines=🤖+AI+Career+Agent;Student+Career+Analyser;Your+Career%2C+Unlocked+🚀;Land+Your+Dream+Job+Faster!" alt="Typing SVG" />
+  </a>
 </p>
 
-<p>
+<p align="center">
+  <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi" />
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+  <img src="https://img.shields.io/badge/Google_Gemini-8E44AD?style=for-the-badge&logo=google&logoColor=white" />
+  <img src="https://img.shields.io/badge/Groq_LLaMA-FF6B35?style=for-the-badge&logo=meta&logoColor=white" />
+  <img src="https://img.shields.io/badge/LangChain-121212?style=for-the-badge&logo=chainlink&logoColor=white" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Status-Active-10b981?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-a855f7?style=flat-square" />
   <img src="https://img.shields.io/badge/PRs-Welcome-ec4899?style=flat-square" />
@@ -27,12 +21,9 @@
   <img src="https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white" />
 </p>
 
-<br/>
+---
 
-> **AI Career Agent** is a full-stack, AI-powered career intelligence platform built for students and modern professionals.
-> Upload your resume and a job description to instantly receive **ATS optimization scores**, **skill gap analysis**,
-> **real-time market insights**, **AI-generated cover letters**, and **personalized week-by-week learning roadmaps** —
-> all powered by a multi-agent LangChain architecture.
+> **AI Career Agent** is a full-stack, AI-powered career intelligence platform built for students and modern professionals. Upload your resume and a job description to instantly receive ATS optimization scores, skill gap analysis, real-time market insights, AI-generated cover letters, and personalized week-by-week learning roadmaps — all powered by a multi-agent LangChain architecture.
 
 <br/>
 
@@ -49,8 +40,6 @@
 | 🧠 | **Unified AI Chatbot** — Intent-routing, streamed conversational agent | LangChain LCEL |
 
 ---
-
-</div>
 
 ## 📋 Table of Contents
 
