@@ -1,31 +1,87 @@
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_core.documents import Document
 import os
+import logging
+from dotenv import load_dotenv
+from typing import List
+
+from langchain_pinecone import PineconeVectorStore
+from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
+from google import genai                          # new google-genai SDK (replaces google-generativeai)
+from google.genai import types as genai_types
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
-class RAGStore:
-    def __init__(self, index_path: str = "faiss_index"):
-        # Offline, open-source embedding model
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
+# ── Custom Embeddings using google-genai SDK ──────────────────────────────────
+# Uses google-genai package (not the old google-generativeai) which is the
+# current Google AI Python SDK. Produces 3072-dim vectors via gemini-embedding-001.
+class GeminiEmbeddings(Embeddings):
+    """
+    LangChain-compatible Embeddings class backed by Gemini gemini-embedding-001.
+    Uses google-genai SDK (Client-based API).
+    """
+
+    def __init__(self):
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY (or GOOGLE_API_KEY) is missing from your .env file!")
+
+        # New SDK: Client-based initialization
+        self.client = genai.Client(api_key=api_key)
+        self.model = "models/gemini-embedding-001"   # 3072-dim vectors
+
+    def _embed(self, text: str) -> List[float]:
+        """Embed a single string and return its float vector."""
+        result = self.client.models.embed_content(
+            model=self.model,
+            contents=text,
+            config=genai_types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT"),
         )
-        self.db = None
-        self.index_path = index_path
+        return result.embeddings[0].values     # new SDK returns result.embeddings[0].values
 
-        # Auto-load index if it already exists
-        if os.path.exists(index_path):
-            self.load_index()
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """Embed a list of documents (called by build_index)."""
+        embeddings = []
+        for text in texts:
+            try:
+                embeddings.append(self._embed(text))
+            except Exception as e:
+                logger.error(f"Embedding failed: {e}")
+                raise
+        return embeddings
+
+    def embed_query(self, text: str) -> List[float]:
+        """Embed a single query string (called by retrieve)."""
+        return self._embed(text)
+
+
+# ── RAGStore ──────────────────────────────────────────────────────────────────
+class RAGStore:
+    """
+    Wraps a Pinecone vector store with Gemini text-embedding-004 embeddings.
+    Provides build_index() to upload and retrieve() to query.
+    """
+
+    def __init__(self):
+        self.embeddings = GeminiEmbeddings()
+
+        self.index_name = os.environ.get("PINECONE_INDEX_NAME")
+        if not self.index_name:
+            raise ValueError("PINECONE_INDEX_NAME is missing from your .env file!")
+
+        # Connect to the existing Pinecone index
+        self.db = PineconeVectorStore(
+            index_name=self.index_name,
+            embedding=self.embeddings,
+        )
+        logger.info(f"RAGStore connected to Pinecone index: {self.index_name}")
 
     def build_index(self, documents: list):
         """
-        documents format:
-        [
-            {
-                "content": "text chunk",
-                "metadata": {...}
-            }
-        ]
+        Converts raw dicts to LangChain Documents, embeds them,
+        and pushes all chunks to Pinecone.
         """
         if not documents:
             raise ValueError("No documents provided for indexing")
@@ -33,71 +89,38 @@ class RAGStore:
         docs = [
             Document(
                 page_content=d["content"],
-                metadata=d.get("metadata", {})
+                metadata=d.get("metadata", {}),
             )
             for d in documents
         ]
 
-        self.db = FAISS.from_documents(docs, self.embeddings)
-        self.save_index()
+        print(f"Pushing {len(docs)} chunk(s) to Pinecone index: '{self.index_name}'...")
+        self.db.add_documents(docs)
+        print("✅ Successfully uploaded to Pinecone!")
 
-    def retrieve(self, query: str, k: int = 4):
-        if self.db is None:
-            return []
-
+    def retrieve(self, query: str, k: int = 4) -> List[Document]:
+        """
+        Returns the top-k most similar document chunks from Pinecone.
+        """
         retriever = self.db.as_retriever(search_kwargs={"k": k})
         return retriever.invoke(query)
 
-    # -----------------------------
-    # Persistence
-    # -----------------------------
-    def save_index(self):
-        if self.db is None:
-            return
 
-        self.db.save_local(self.index_path)
-
-    def load_index(self):
-        self.db = FAISS.load_local(
-            self.index_path,
-            self.embeddings,
-            allow_dangerous_deserialization=True
-        )
-
-
+# ── Standalone Test ───────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    # Step 1: Create dummy documents
+    print("\n=== Testing GeminiEmbeddings + Pinecone ===\n")
     documents = [
-        {
-            "content": "FAISS is a library for fast similarity search on vector embeddings.",
-            "metadata": {"source": "faiss.txt"}
-        },
-        {
-            "content": "LangChain helps build applications using large language models.",
-            "metadata": {"source": "langchain.txt"}
-        },
-        {
-            "content": "HuggingFace provides open-source models for NLP tasks.",
-            "metadata": {"source": "hf.txt"}
-        }
+        {"content": "Pinecone is a fast cloud vector database for AI.", "metadata": {"source": "test"}},
+        {"content": "LangChain helps build LLM applications easily.", "metadata": {"source": "test"}},
+        {"content": "Google Gemini produces accurate vector embeddings.", "metadata": {"source": "test"}},
     ]
-   
 
-    # Step 2: Initialize RAG store
-    rag_store = RAGStore()
+    store = RAGStore()
+    store.build_index(documents)
 
-    # Step 3: Build FAISS index
-    rag_store.build_index(documents)
-    print("Index built successfully")
+    query = "What database is used for AI?"
+    results = store.retrieve(query, k=2)
 
-    # Step 4: Query the index
-    query = "What is FAISS used for?"
-    results = rag_store.retrieve(query, k=2)
-
-    # Step 5: Print results
-    print("\nRetrieved documents:\n")
-    for i, doc in enumerate(results, start=1):
-        print(f"Result {i}:")
-        print("Content:", doc.page_content)
-        print("Metadata:", doc.metadata)
-        print("-" * 40)
+    print(f"\nQuery: '{query}'")
+    for i, doc in enumerate(results, 1):
+        print(f"  Result {i}: {doc.page_content}")

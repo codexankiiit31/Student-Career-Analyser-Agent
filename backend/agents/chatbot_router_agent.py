@@ -13,6 +13,7 @@ from langchain_core.output_parsers import PydanticOutputParser, StrOutputParser
 from langchain_core.runnables import RunnableLambda
 
 from utils.llm_utils import get_llm
+from utils.ws_logger import send_log
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +95,7 @@ class ChatbotRouterAgent:
         Generate a real answer given the classified intent.
         Heavy agents (market, roadmap) are imported lazily to avoid circular imports.
         """
+        send_log(f"🧠 Processing request... Detected Intent: '{intent}'")
 
         if intent == "greeting":
             return (
@@ -110,7 +112,7 @@ class ChatbotRouterAgent:
             if resume and job:
                 # Have both — run unified analysis
                 try:
-                    from agents.job_anayzer_agent import CareerAgent
+                    from agents.job_analyzer_agent import CareerAgent
                     agent = CareerAgent()
                     result = agent.unified_analysis(resume=resume, job=job)
                     summary = result.get("summary", {}) or result.get("analysis", {}).get("summary", {})

@@ -1,32 +1,77 @@
-from fastapi import FastAPI, UploadFile, Form, HTTPException
+import os
+from dotenv import load_dotenv
+load_dotenv()  # ── Load environment variables before importing anything else
+
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, UploadFile, Form, HTTPException, Depends, Request, BackgroundTasks, status, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
-from pathlib import Path
 from datetime import datetime
-import json
 import uuid
 import uvicorn
 import logging
+import threading
 
+from fastapi.security import OAuth2PasswordRequestForm
+from auth import (
+    Token,
+    User,
+    get_current_user,   # dependency that protects routes
+)
+
+from database.supabase_client import get_supabase_client
+
+# Import the auth router — it owns /auth/register and /auth/token
+from routers.auth_router import router as auth_router
+
+# Configure global file logging
+os.makedirs("logs", exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.FileHandler("logs/app.log", encoding="utf-8"),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
+
 
 # ============================================
 # AGENTS
 # ============================================
 
-from agents.job_anayzer_agent import CareerAgent
+from agents.job_analyzer_agent import CareerAgent
 from agents.market_insights_agent import MarketAnalysisAgent
 from agents.Roadmap_agent import RoadmapLLM
 from agents.chatbot_router_agent import ChatbotRouterAgent
 
-from utils.similarity_search import compute_similarity
-from utils.response_formetter import (
+from utils.ws_logger import ws_manager
+
+from utils.response_formatter import (
     extract_and_clean_text,
     format_cover_letter,
     format_error_response
 )
+
+
+# ============================================
+# LIFESPAN — agent startup / shutdown
+# ============================================
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize all heavy agents once at startup and attach to app.state."""
+    logger.info("Starting up — initializing agents...")
+    app.state.career_agent = CareerAgent()
+    app.state.market_agent = MarketAnalysisAgent()
+    app.state.chatbot_router = ChatbotRouterAgent()
+    yield
+    # Shutdown cleanup (extend as needed)
+    logger.info("Shutting down — agents released.")
+
 
 # ============================================
 # APP INIT
@@ -35,12 +80,43 @@ from utils.response_formetter import (
 app = FastAPI(
     title="AI Career Intelligence Platform",
     version="4.0",
-    description="Chat-based AI career assistant with routing, memory, and multi-agent execution"
+    description="Chat-based AI career assistant with routing, memory, and multi-agent execution",
+    lifespan=lifespan
 )
+
+# ==============================================================
+# INCLUDE ROUTERS
+# ==============================================================
+#
+# Instead of writing /register and /token routes directly here,
+# we organise them into routers/auth_router.py and include them.
+#
+# app.include_router() mounts that router into our app so that
+# all its routes are available, just as if they were written here.
+#
+# The router has prefix="/auth", so the endpoints become:
+#   POST /auth/register
+#   POST /auth/token
+#
+app.include_router(auth_router)
+
+# Allow the React frontend to call this backend.
+# In production, set FRONTEND_URL to your deployed React domain (e.g. https://your-app.vercel.app)
+import os
+
+allowed_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+# Add production frontend URL if it exists
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,28 +126,21 @@ app.add_middleware(
 # FILE STORAGE (RESUME / JOB)
 # ============================================
 
-BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "database"
-DATA_DIR.mkdir(exist_ok=True)
-
-MEMORY_PATH = DATA_DIR / "memory_store.json"
-
-def load_memory():
-    if not MEMORY_PATH.exists():
-        return {}
-    return json.loads(MEMORY_PATH.read_text(encoding="utf-8"))
-
-def save_memory(data: dict):
-    MEMORY_PATH.write_text(
-        json.dumps(data, indent=2, ensure_ascii=False),
-        encoding="utf-8"
-    )
+# We now use Supabase's `user_data` table instead of local files.
 
 # ============================================
 # CHAT MEMORY (PER SESSION)
 # ============================================
 
 CHAT_MEMORY = {}
+
+# ============================================
+# BACKGROUND JOB STORE
+# ============================================
+# Stores job results keyed by job_id.
+# Status values: "pending" | "processing" | "done" | "error"
+JOB_STORE: dict = {}
+JOB_STORE_LOCK = threading.Lock()
 
 def get_chat_history(session_id: str):
     return CHAT_MEMORY.get(session_id, [])
@@ -87,13 +156,7 @@ def format_chat_history(history):
         for msg in history
     )
 
-# ============================================
-# INIT AGENTS
-# ============================================
-
-career_agent = CareerAgent()
-market_agent = MarketAnalysisAgent()
-chatbot_router = ChatbotRouterAgent()
+# Agents are initialized in the lifespan function above and accessed via request.app.state
 
 # ============================================
 # MODELS
@@ -103,6 +166,41 @@ class MarketRequest(BaseModel):
     role: str
     location: Optional[str] = None
     experience_level: Optional[str] = "entry"
+
+
+# ============================================
+# BACKGROUND WORKER
+# ============================================
+
+def _run_market_analysis_job(
+    job_id: str,
+    market_agent,
+    role: str,
+    location: Optional[str],
+    experience_level: str
+):
+    """Runs in a background thread. Writes result to JOB_STORE when done."""
+    with JOB_STORE_LOCK:
+        JOB_STORE[job_id]["status"] = "processing"
+    try:
+        result = market_agent.analyze_market(
+            role=role,
+            location=location,
+            experience_level=experience_level
+        )
+        with JOB_STORE_LOCK:
+            JOB_STORE[job_id].update({
+                "status": "done",
+                "data": result,
+                "timestamp": datetime.now().isoformat()
+            })
+    except Exception as e:
+        logger.error(f"Background market job {job_id} failed: {e}")
+        with JOB_STORE_LOCK:
+            JOB_STORE[job_id].update({
+                "status": "error",
+                "error": str(e)
+            })
 
 class RoadmapRequest(BaseModel):
     query: str
@@ -124,16 +222,22 @@ def root():
             "career_agent": True,
             "market_agent": True,
             "roadmap_rag": True,
-            "chat_router": True
+            "chat_router": True,
+            "auth": True
         }
     }
+
 
 # ============================================
 # RESUME FLOW
 # ============================================
 
 @app.post("/upload_resume")
-async def upload_resume(file: UploadFile):
+async def upload_resume(
+    request: Request,
+    file: UploadFile,
+    current_user: User = Depends(get_current_user)  # 🔒 JWT protected
+):
     if not file.filename:
         raise HTTPException(400, "Invalid file")
 
@@ -142,34 +246,52 @@ async def upload_resume(file: UploadFile):
     if len(text.strip()) < 50:
         raise HTTPException(400, "Resume text too short")
 
-    memory = load_memory()
-    memory["resume"] = text
-    memory["resume_uploaded_at"] = datetime.now().isoformat()
-    save_memory(memory)
+    supabase = get_supabase_client()
+    
+    # Upsert the resume text into the user_data table
+    response = supabase.table("user_data").upsert({
+        "user_id": current_user.id,
+        "resume_text": text
+    }, on_conflict="user_id").execute()
 
     return {"message": "Resume uploaded successfully"}
 
 @app.post("/analyze_job")
-async def analyze_job(job_description: str = Form(...)):
-    memory = load_memory()
-    memory["job"] = job_description.strip()
-    memory["job_uploaded_at"] = datetime.now().isoformat()
-    save_memory(memory)
+async def analyze_job(
+    request: Request,
+    job_description: str = Form(...),
+    current_user: User = Depends(get_current_user)  # 🔒 JWT protected
+):
+    supabase = get_supabase_client()
+    
+    # Upsert the job description into the user_data table
+    response = supabase.table("user_data").upsert({
+        "user_id": current_user.id,
+        "job_description": job_description.strip()
+    }, on_conflict="user_id").execute()
 
     return {"message": "Job description saved"}
 
 @app.get("/analyze_resume")
-def analyze_resume():
-    memory = load_memory()
-
-    resume = memory.get("resume")
-    job = memory.get("job")
+def analyze_resume(
+    request: Request,
+    current_user: User = Depends(get_current_user)  # 🔒 JWT protected
+):
+    supabase = get_supabase_client()
+    response = supabase.table("user_data").select("*").eq("user_id", current_user.id).execute()
+    
+    if not response.data:
+        raise HTTPException(400, "Resume or Job missing")
+        
+    user_data = response.data[0]
+    resume = user_data.get("resume_text")
+    job = user_data.get("job_description")
 
     if not resume or not job:
         raise HTTPException(400, "Resume or Job missing")
 
     try:
-        result = career_agent.unified_analysis(resume=resume, job=job)
+        result = request.app.state.career_agent.unified_analysis(resume=resume, job=job)
         return {
             "status": "success",
             **result
@@ -178,17 +300,25 @@ def analyze_resume():
         return format_error_response(str(e), "resume_analysis")
 
 @app.get("/generate_cover_letter")
-def generate_cover_letter():
-    memory = load_memory()
-
-    resume = memory.get("resume")
-    job = memory.get("job")
+def generate_cover_letter(
+    request: Request,
+    current_user: User = Depends(get_current_user)  # 🔒 JWT protected
+):
+    supabase = get_supabase_client()
+    response = supabase.table("user_data").select("*").eq("user_id", current_user.id).execute()
+    
+    if not response.data:
+        raise HTTPException(400, "Resume or Job missing")
+        
+    user_data = response.data[0]
+    resume = user_data.get("resume_text")
+    job = user_data.get("job_description")
 
     if not resume or not job:
         raise HTTPException(400, "Resume or Job missing")
 
     try:
-        result = career_agent.generate_cover_letter(resume, job)
+        result = request.app.state.career_agent.generate_cover_letter(resume, job)
         return {
             "status": "success",
             "generated_letter": result.get("cover_letter", ""),
@@ -206,27 +336,68 @@ def generate_cover_letter():
 # ============================================
 
 @app.post("/api/market_analysis")
-def market_analysis(request: MarketRequest):
-    try:
-        result = market_agent.analyze_market(
-            role=request.role,
-            location=request.location,
-            experience_level=request.experience_level
-        )
+def market_analysis(
+    req: Request,
+    request: MarketRequest,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user)  # 🔒 JWT protected
+):
+    """
+    Immediately returns a job_id. Scraping + LLM runs in the background.
+    Poll GET /api/market_analysis/status/{job_id} for results.
+    """
+    if not request.role or not request.role.strip():
+        raise HTTPException(400, "Role cannot be empty")
+
+    job_id = str(uuid.uuid4())
+    with JOB_STORE_LOCK:
+        JOB_STORE[job_id] = {"status": "pending"}
+
+    background_tasks.add_task(
+        _run_market_analysis_job,
+        job_id,
+        req.app.state.market_agent,
+        request.role.strip(),
+        request.location,
+        request.experience_level or "entry"
+    )
+
+    return {"job_id": job_id, "status": "pending"}
+
+
+@app.get("/api/market_analysis/status/{job_id}")
+def market_analysis_status(
+    job_id: str,
+    current_user: User = Depends(get_current_user)  # 🔒 JWT protected
+):
+    """Poll this endpoint every few seconds to check if the background job is complete."""
+    with JOB_STORE_LOCK:
+        job = JOB_STORE.get(job_id)
+
+    if not job:
+        raise HTTPException(404, "Job not found. It may have expired.")
+
+    if job["status"] == "done":
         return {
-            "status": "success",
-            "timestamp": datetime.now().isoformat(),
-            "data": result
+            "status": "done",
+            "timestamp": job.get("timestamp"),
+            "data": job["data"]
         }
-    except Exception as e:
-        raise HTTPException(500, str(e))
+    elif job["status"] == "error":
+        raise HTTPException(500, job.get("error", "Analysis failed"))
+    else:
+        # pending or processing
+        return {"status": job["status"]}
 
 # ============================================
 # ROADMAP (RAG)
 # ============================================
 
 @app.post("/api/get_roadmap")
-def get_roadmap(request: RoadmapRequest):
+def get_roadmap(
+    request: RoadmapRequest,
+    current_user: User = Depends(get_current_user)  # 🔒 JWT protected
+):
     if len(request.query.strip()) < 5:
         raise HTTPException(400, "Query too short")
 
@@ -247,7 +418,7 @@ def get_roadmap(request: RoadmapRequest):
 # ============================================
 
 @app.post("/api/chat")
-def chat(request: ChatRequest):
+def chat(req: Request, request: ChatRequest, current_user: User = Depends(get_current_user)):
 
     if not request.message.strip():
         raise HTTPException(400, "Message cannot be empty")
@@ -258,6 +429,8 @@ def chat(request: ChatRequest):
 
     save_chat_message(session_id, "user", request.message)
 
+    chatbot_router = req.app.state.chatbot_router
+
     # 1. Classify intent
     route = chatbot_router.route(
         history=history_text,
@@ -266,10 +439,15 @@ def chat(request: ChatRequest):
     intent = route.get("intent", "general_guidance")
     role   = route.get("role")
 
-    # 2. Load resume + job from memory (used for career_analysis)
-    memory = load_memory()
-    resume = memory.get("resume", "")
-    job    = memory.get("job", "")
+    # 2. Load resume + job from Supabase (used for career_analysis)
+    supabase = get_supabase_client()
+    user_resp = supabase.table("user_data").select("*").eq("user_id", current_user.id).execute()
+    
+    resume = ""
+    job = ""
+    if user_resp.data:
+        resume = user_resp.data[0].get("resume_text") or ""
+        job    = user_resp.data[0].get("job_description") or ""
 
     # 3. Generate real answer
     try:
@@ -302,10 +480,11 @@ def chat(request: ChatRequest):
 # ============================================
 
 @app.delete("/clear_data")
-def clear_data():
-    save_memory({})
+def clear_data(current_user: User = Depends(get_current_user)):
+    supabase = get_supabase_client()
+    supabase.table("user_data").delete().eq("user_id", current_user.id).execute()
     CHAT_MEMORY.clear()
-    return {"message": "All stored data cleared"}
+    return {"message": "All stored data cleared for the current user"}
 
 # ============================================
 # RUN

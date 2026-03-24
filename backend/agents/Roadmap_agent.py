@@ -23,9 +23,10 @@ class RoadmapLLM:
         self.llm = get_llm()
 
         try:
+            # This calls ingest_roadmap.py which uploads to Pinecone and returns the db instance
             self.rag_store = ingested_roadmap(topic)
         except Exception as e:
-            logger.warning(f"RAG ingestion failed for '{topic}': {e}. Proceeding without RAG context.")
+            logger.warning(f"RAG ingestion/connection failed for '{topic}': {e}. Proceeding without RAG context.")
             self.rag_store = None
 
         prompt_text = Path("prompts/roadmap_prompt.txt").read_text(encoding="utf-8")

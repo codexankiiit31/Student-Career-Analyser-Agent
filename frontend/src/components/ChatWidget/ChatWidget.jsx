@@ -3,7 +3,6 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
-    MessageCircle,
     X,
     Send,
     Bot,
@@ -15,6 +14,7 @@ import {
     BrainCircuit
 } from "lucide-react";
 import "./ChatWidget.css";
+import LiveTerminal from "../LiveTerminal/LiveTerminal";
 
 const API_URL = "http://localhost:8000/api/chat";
 
@@ -51,6 +51,7 @@ const QUICK_PROMPTS = [
     "📄 Analyze my resume",
     "📈 Salary for Data Scientist",
     "🗺️ Roadmap to become ML Engineer",
+    "💡 How to improve my ATS score?",
     "💡 How to improve my ATS score?",
     "🔥 Top skills for 2025",
 ];
@@ -99,9 +100,15 @@ export default function ChatWidget() {
         setMessages(prev => [...prev, { role: "assistant", text: "", id: assistantId, streaming: true }]);
 
         try {
+            const token = localStorage.getItem('access_token');
+            const headers = { "Content-Type": "application/json" };
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
+
             const res = await fetch(API_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: headers,
                 body: JSON.stringify({
                     message: trimmed,
                     session_id: sessionId,
@@ -113,6 +120,9 @@ export default function ChatWidget() {
             if (sid) setSessionId(sid);
 
             if (!res.ok || !res.body) {
+                if (res.status === 401) {
+                    throw new Error("UNAUTHORIZED");
+                }
                 throw new Error(`Server error: ${res.status}`);
             }
 
@@ -126,8 +136,12 @@ export default function ChatWidget() {
                 if (done) break;
                 const chunk = decoder.decode(value, { stream: true });
                 accumulated += chunk;
+                
+                // Use a block-scoped constant to capture the current value of accumulated
+                const currentText = accumulated;
+                
                 setMessages(prev =>
-                    prev.map(m => m.id === assistantId ? { ...m, text: accumulated } : m)
+                    prev.map(m => m.id === assistantId ? { ...m, text: currentText } : m)
                 );
             }
 
@@ -137,9 +151,13 @@ export default function ChatWidget() {
             );
 
         } catch (err) {
+            let errorMsg = "⚠️ Something went wrong. Please try again.";
+            if (err.message === "UNAUTHORIZED") {
+                errorMsg = "🔒 Your session has expired or you are not logged in. Please refresh or log in again to use the chatbot.";
+            }
             setMessages(prev =>
                 prev.map(m => m.id === assistantId
-                    ? { ...m, text: "⚠️ Something went wrong. Please try again.", streaming: false }
+                    ? { ...m, text: errorMsg, streaming: false }
                     : m
                 )
             );
@@ -245,8 +263,8 @@ export default function ChatWidget() {
                         {loading && messages[messages.length - 1]?.role === "user" && (
                             <div className="cw-msg cw-msg--assistant">
                                 <div className="cw-msg-avatar"><Bot size={13} /></div>
-                                <div className="cw-bubble cw-bubble--assistant">
-                                    <span className="cw-typing"><span /><span /><span /></span>
+                                <div className="cw-bubble cw-bubble--assistant" style={{ width: '100%', padding: '0px', background: 'transparent' }}>
+                                    <LiveTerminal />
                                 </div>
                             </div>
                         )}

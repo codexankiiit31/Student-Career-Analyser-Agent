@@ -137,6 +137,61 @@
   box-shadow: 0 0 24px rgba(124, 58, 237, 0.55);
 }
 
+/* ── Auth buttons  (Login / Logout) ───────────────────────── */
+
+/* Login button — ghost style */
+.nav-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.nav-login-btn:hover {
+  color: #fff;
+  border-color: rgba(124, 58, 237, 0.5);
+  background: rgba(124, 58, 237, 0.1);
+}
+
+/* Logout button — same ghost style as login */
+.nav-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.nav-logout-btn:hover {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+/* Mobile logout button — plain link style */
+.mobile-logout {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  color: #f87171;
+}
+
 @media (max-width: 768px) {
   .navbar-menu {
     display: none;
@@ -147,6 +202,12 @@
   }
 
   .nav-cta-btn {
+    display: none;
+  }
+
+  /* hide text labels on login/logout buttons on small screens */
+  .nav-login-btn span,
+  .nav-logout-btn span {
     display: none;
   }
 }

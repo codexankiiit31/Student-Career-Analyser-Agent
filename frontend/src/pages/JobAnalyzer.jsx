@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import {
   Briefcase,
@@ -22,16 +22,79 @@ import CoverLetterGenerator from "../components/CoverLetterGenerator/CoverLetter
 
 import "../Styles/JobAnalyzer.css";
 
+// 🌍 Global State to persist active promises across React unmounts/remounts
+let globalAnalyzing = false;
+let globalAnalysisPromise = null;
+
 const JobAnalyzer = () => {
-  const [activeTab, setActiveTab] = useState("upload");
+  const [activeTab, setActiveTab] = useState(() => {
+    return sessionStorage.getItem("ja_activeTab") || "upload";
+  });
 
-  const [resumeUploaded, setResumeUploaded] = useState(false);
-  const [jobAnalyzed, setJobAnalyzed] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
+  const [resumeUploaded, setResumeUploaded] = useState(() => {
+    return sessionStorage.getItem("ja_resume") === "true";
+  });
+  const [jobAnalyzed, setJobAnalyzed] = useState(() => {
+    return sessionStorage.getItem("ja_job") === "true";
+  });
+  const [analyzing, setAnalyzing] = useState(globalAnalyzing);
 
-  const [matchData, setMatchData] = useState(null);
-  const [atsData, setAtsData] = useState(null);
-  const [coverLetterData, setCoverLetterData] = useState(null);
+  const isMountedRef = React.useRef(true);
+
+  // Hook into active global promise on mount
+  useEffect(() => {
+    isMountedRef.current = true;
+    if (globalAnalyzing && globalAnalysisPromise) {
+      setAnalyzing(true);
+      globalAnalysisPromise.then((res) => {
+        if (!isMountedRef.current) return;
+        setAnalyzing(false);
+        if (res.success) {
+          setMatchData(res.matchData);
+          setAtsData(res.atsData);
+          setCoverLetterData(res.coverLetterData);
+          setActiveTab("skills");
+          toast.success("Complete analysis finished (Resumed)");
+        } else {
+          toast.error(res.error?.detail || res.error?.message || "Analysis failed");
+        }
+      });
+    }
+    return () => { isMountedRef.current = false; };
+  }, []);
+
+  const [matchData, setMatchData] = useState(() => {
+    const saved = sessionStorage.getItem("ja_matchData");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [atsData, setAtsData] = useState(() => {
+    const saved = sessionStorage.getItem("ja_atsData");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [coverLetterData, setCoverLetterData] = useState(() => {
+    const saved = sessionStorage.getItem("ja_coverLetterData");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // Persist state to sessionStorage
+  useEffect(() => { sessionStorage.setItem("ja_activeTab", activeTab); }, [activeTab]);
+  useEffect(() => { sessionStorage.setItem("ja_resume", resumeUploaded); }, [resumeUploaded]);
+  useEffect(() => { sessionStorage.setItem("ja_job", jobAnalyzed); }, [jobAnalyzed]);
+
+  useEffect(() => {
+    if (matchData) sessionStorage.setItem("ja_matchData", JSON.stringify(matchData));
+    else sessionStorage.removeItem("ja_matchData");
+  }, [matchData]);
+
+  useEffect(() => {
+    if (atsData) sessionStorage.setItem("ja_atsData", JSON.stringify(atsData));
+    else sessionStorage.removeItem("ja_atsData");
+  }, [atsData]);
+
+  useEffect(() => {
+    if (coverLetterData) sessionStorage.setItem("ja_coverLetterData", JSON.stringify(coverLetterData));
+    else sessionStorage.removeItem("ja_coverLetterData");
+  }, [coverLetterData]);
 
   const tabs = [
     { id: "upload", label: "Upload & Analyze", icon: Upload },
@@ -50,53 +113,68 @@ const JobAnalyzer = () => {
     toast.success("Job description saved");
   };
 
-  const handleAnalyzeAll = async () => {
+  const handleAnalyzeAll = () => {
     if (!resumeUploaded || !jobAnalyzed) {
       toast.warning("Please upload resume and job description first");
       return;
     }
 
     setAnalyzing(true);
+    globalAnalyzing = true;
+    toast.info("Running complete AI analysis... You can navigate away and come back!");
 
-    try {
-      toast.info("Running complete AI analysis...");
+    globalAnalysisPromise = (async () => {
+      try {
+        // ✅ Unified backend call
+        const result = await apiService.analyzeResume();
+        const analysis = result?.analysis;
 
-      // ✅ Unified backend call
-      const result = await apiService.analyzeResume();
-      // const result = ANALYZE_RESPONSE;
+        if (!analysis) {
+          throw new Error("Invalid analysis response from backend");
+        }
 
-      // ✅ IMPORTANT: normalize backend response
-      const analysis = result?.analysis;
+        // ✅ Prepare Data
+        const newMatchData = {
+          summary: analysis.summary,
+          match_analysis: analysis.match_analysis
+        };
+        const newAtsData = {
+          summary: analysis.summary,
+          ats_optimization: analysis.ats_optimization
+        };
+        const newCoverLetterData = await apiService.generateCoverLetter();
 
-      if (!analysis) {
-        throw new Error("Invalid analysis response from backend");
+        // ✅ Lock data in sessionStorage synchronously
+        sessionStorage.setItem("ja_matchData", JSON.stringify(newMatchData));
+        sessionStorage.setItem("ja_atsData", JSON.stringify(newAtsData));
+        sessionStorage.setItem("ja_coverLetterData", JSON.stringify(newCoverLetterData));
+        sessionStorage.setItem("ja_activeTab", "skills");
+
+        globalAnalyzing = false;
+        return { success: true, matchData: newMatchData, atsData: newAtsData, coverLetterData: newCoverLetterData };
+
+      } catch (error) {
+        console.error("Analysis error:", error);
+        globalAnalyzing = false;
+        return { success: false, error };
       }
+    })();
 
-      // ✅ Skills Analysis Tab
-      setMatchData({
-        summary: analysis.summary,
-        match_analysis: analysis.match_analysis
-      });
-
-      // ✅ ATS Optimization Tab
-      setAtsData({
-        summary: analysis.summary,
-        ats_optimization: analysis.ats_optimization
-      });
-
-      // ✅ Cover Letter
-      const coverLetterResponse = await apiService.generateCoverLetter();
-      setCoverLetterData(coverLetterResponse);
-
-      toast.success("Complete analysis finished");
-      setActiveTab("skills");
-
-    } catch (error) {
-      console.error("Analysis error:", error);
-      toast.error(error?.detail || error?.message || "Analysis failed");
-    } finally {
+    // ✅ Attach UI handler to the global promise for THIS mounted instance
+    globalAnalysisPromise.then((res) => {
+      if (!isMountedRef.current) return; // If user navigated away, UI update handled by useEffect on remount
       setAnalyzing(false);
-    }
+      
+      if (res.success) {
+        setMatchData(res.matchData);
+        setAtsData(res.atsData);
+        setCoverLetterData(res.coverLetterData);
+        setActiveTab("skills");
+        toast.success("Complete analysis finished");
+      } else {
+        toast.error(res.error?.detail || res.error?.message || "Analysis failed");
+      }
+    });
   };
 
   const renderTabContent = () => {

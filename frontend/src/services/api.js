@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Base API URL - change this to your backend URL
-const API_BASE_URL = 'http://127.0.0.1:8000/';
+// Base API URL - prioritize environment variable for production, fallback to generic localhost for dev
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -12,9 +12,14 @@ const api = axios.create({
   timeout: 60000, // 60 seconds timeout for long-running operations
 });
 
-// Request interceptor for logging
+// Request interceptor for logging and auth
 api.interceptors.request.use(
   (config) => {
+    // Attach token if available
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
     console.log(`🚀 API Request: ${config.method.toUpperCase()} ${config.url}`);
     return config;
   },
@@ -32,6 +37,17 @@ api.interceptors.response.use(
   },
   (error) => {
     console.error('❌ Response Error:', error.response?.data || error.message);
+
+    // If the server returns 401 Unauthorized, it means either:
+    //   - The user is not logged in (no token)
+    //   - The token has expired
+    //   - The token is invalid
+    // In all these cases, clear the stored token and redirect to the login page.
+    if (error.response?.status === 401) {
+      localStorage.removeItem('access_token');  // clear the stale/invalid token
+      window.location.href = '/login';           // send user to the login page
+    }
+
     return Promise.reject(error);
   }
 );
@@ -52,6 +68,55 @@ const apiService = {
   healthCheck: async () => {
     try {
       const response = await api.get('/health');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: error.message };
+    }
+  },
+
+  /**
+   * Register a new user account.
+   * Sends username, email, and password to POST /register.
+   * On success, the user should then log in via apiService.login().
+   *
+   * @param {string} username - Desired username
+   * @param {string} email    - User's email address
+   * @param {string} password - Chosen password
+   * @returns {Promise<Object>} Confirmation message and user info
+   */
+  register: async (username, email, password) => {
+    try {
+      // POST /auth/register  (auth router prefix + /register)
+      const response = await api.post('/auth/register', { username, email, password });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { error: error.message };
+    }
+  },
+
+  /**
+   * Login to get access token
+   * @param {string} username 
+   * @param {string} password 
+   * @returns {Promise<Object>} Token data
+   */
+  login: async (username, password) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('username', username);
+      formData.append('password', password);
+
+      // POST /auth/token  (auth router prefix + /token)
+      // Must be sent as form-encoded data (not JSON) — required by OAuth2
+      const response = await api.post('/auth/token', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+      // Store token on successful login
+      if (response.data && response.data.access_token) {
+        localStorage.setItem('access_token', response.data.access_token);
+      }
       return response.data;
     } catch (error) {
       throw error.response?.data || { error: error.message };
@@ -177,6 +242,10 @@ const apiService = {
    * @param {string} [params.experience_level] - Experience level (default: "entry")
    * @returns {Promise<Object>} Market analysis with salary, skills, and jobs
    */
+  /**
+   * Start a background market analysis job.
+   * Returns { job_id, status: "pending" } immediately.
+   */
   analyzeMarket: async ({ role, location = null, experience_level = "entry" }) => {
     try {
       const response = await api.post('/api/market_analysis', {
@@ -184,6 +253,19 @@ const apiService = {
         location,
         experience_level,
       });
+      return response.data; // { job_id, status: "pending" }
+    } catch (error) {
+      throw error.response?.data || { error: error.message };
+    }
+  },
+
+  /**
+   * Poll the status of a background market analysis job.
+   * Returns { status: "pending"|"processing"|"done"|"error", data? }
+   */
+  getMarketStatus: async (jobId) => {
+    try {
+      const response = await api.get(`/api/market_analysis/status/${jobId}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || { error: error.message };

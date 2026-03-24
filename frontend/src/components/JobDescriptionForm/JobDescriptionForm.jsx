@@ -121,12 +121,7 @@ We are looking for a Senior Software Engineer with 5+ years of experience in Pyt
           )}
           <div className="status-content">
             <p className="status-message">{analyzeStatus.message}</p>
-            {analyzeStatus.data && (
-              <div className="status-details">
-                <span>📄 Length: {analyzeStatus.data.description_length} characters</span>
-                <span>📝 Words: {analyzeStatus.data.word_count}</span>
-              </div>
-            )}
+
           </div>
         </div>
       )}

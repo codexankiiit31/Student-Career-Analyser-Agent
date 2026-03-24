@@ -1,7 +1,7 @@
 // MarketAnalyzer.jsx — Reads actual backend shape from CareerMarketOutput Pydantic model
 // Backend returns: { career, skills, declining_skills, career_growth, salary, summary_advice, sources, location, experience_level }
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -11,7 +11,6 @@ import {
   DollarSign,
   Globe,
   IndianRupee,
-  Briefcase,
   Lightbulb,
   Wrench,
   Star,
@@ -25,8 +24,8 @@ import {
   BookOpen
 } from "lucide-react";
 import "../Styles/MarketAnalyzer.css";
+import apiService from "../services/api";
 
-const API_URL = "http://localhost:8000/api/market_analysis";
 
 /* ────────────────────────────────────────
    SUBCOMPONENTS
@@ -89,54 +88,125 @@ const SourceItem = ({ url, index }) => {
 ──────────────────────────────────────── */
 
 export default function MarketAnalyzer() {
-  const [form, setForm] = useState({ role: "", location: "", experience_level: "entry" });
+  const [form, setForm] = useState(() => {
+    const saved = sessionStorage.getItem("ma_form");
+    return saved ? JSON.parse(saved) : { role: "", location: "", experience_level: "entry" };
+  });
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState(null);   // actual result.data from backend
+  const [loadingStep, setLoadingStep] = useState(0);
+  const [data, setData] = useState(() => {
+    const saved = sessionStorage.getItem("ma_data");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [error, setError] = useState(null);
   const [showSources, setShowSources] = useState(false);
+
+  const pollRef = React.useRef(null);  // holds the setInterval ID
+  const isMountedRef = React.useRef(true);
+
+  // Progressive loading messages shown during polling
+  const LOADING_STEPS = [
+    "🔍 Searching SerpAPI for market reports...",
+    "📄 Scraping Glassdoor, Naukri, Coursera...",
+    "🧠 AI agent is compiling skills & salary data...",
+    "⚡ Almost there, finalising analysis...",
+  ];
+
+  const stopPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+
+  // Preserve form and data in sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem("ma_form", JSON.stringify(form));
+  }, [form]);
+
+  useEffect(() => {
+    if (data) {
+      sessionStorage.setItem("ma_data", JSON.stringify(data));
+    } else {
+      sessionStorage.removeItem("ma_data");
+    }
+  }, [data]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      stopPolling();
+    };
+  }, []);
 
   const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.role.trim()) return;
+
     setError(null);
     setLoading(true);
+    setLoadingStep(0);
     setData(null);
     setShowSources(false);
+    stopPolling();
 
+    let jobId;
     try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          role: form.role.trim(),
-          location: form.location.trim() || null,
-          experience_level: form.experience_level,
-        }),
+      const res = await apiService.analyzeMarket({
+        role: form.role.trim(),
+        location: form.location.trim() || null,
+        experience_level: form.experience_level,
       });
-
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-
-      const json = await res.json();
-
-      // Backend wraps result in { status, data }
-      const resultData = json?.data ?? json;
-      if (!resultData?.career) throw new Error("Invalid response from server");
-
-      setData(resultData);
-
-      // scroll to results
-      setTimeout(() => {
-        document.getElementById("ma-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 200);
-
+      jobId = res.job_id;
     } catch (err) {
-      console.error(err);
-      setError(err.message || "Something went wrong");
-    } finally {
       setLoading(false);
+      setError(err?.detail || err?.error || "Failed to start analysis. Please try again.");
+      return;
     }
+
+    // Advance loading message every 7 seconds
+    let step = 0;
+    const stepTimer = setInterval(() => {
+      step = Math.min(step + 1, LOADING_STEPS.length - 1);
+      if (isMountedRef.current) setLoadingStep(step);
+    }, 7000);
+
+    // Poll status every 3 seconds
+    pollRef.current = setInterval(async () => {
+      try {
+        const status = await apiService.getMarketStatus(jobId);
+        if (!isMountedRef.current) { clearInterval(stepTimer); stopPolling(); return; }
+
+        if (status.status === "done") {
+          clearInterval(stepTimer);
+          stopPolling();
+          const resultData = status.data;
+          if (!resultData?.career) throw new Error("Invalid response from server");
+          sessionStorage.setItem("ma_data", JSON.stringify(resultData));
+          setData(resultData);
+          setLoading(false);
+          setTimeout(() => {
+            document.getElementById("ma-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 200);
+        } else if (status.status === "error") {
+          clearInterval(stepTimer);
+          stopPolling();
+          setLoading(false);
+          setError("Analysis failed on the server. Please try again.");
+        }
+        // "pending" or "processing" — keep polling
+      } catch (err) {
+        clearInterval(stepTimer);
+        stopPolling();
+        if (isMountedRef.current) {
+          setLoading(false);
+          setError(err?.detail || err?.error || "Something went wrong while checking job status.");
+        }
+      }
+    }, 3000);
   };
 
   // Derived from backend Pydantic CareerMarketOutput
@@ -208,8 +278,8 @@ export default function MarketAnalyzer() {
         {loading && (
           <div className="ma-loading-box">
             <Loader2 size={36} className="ma-spin" />
-            <p>Scraping live market data & running AI analysis…</p>
-            <span className="ma-loading-note">This may take 15–30 seconds</span>
+            <p>{LOADING_STEPS[loadingStep]}</p>
+            <span className="ma-loading-note">Live web scraping takes 10–20 seconds</span>
           </div>
         )}
 

@@ -32,7 +32,6 @@ def get_llm(temperature: float = 0.1):
         model="gemini-2.5-flash-lite",
         temperature=temperature,
         google_api_key=api_key,
-        convert_system_message_to_human=True
     )
     
 
@@ -91,7 +90,7 @@ def get_settings():
         
         # Model Settings
         "GEMINI_MODEL": os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite"),
-        "EMBEDDING_MODEL": os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2"),
+        "EMBEDDING_MODEL": os.getenv("EMBEDDING_MODEL", "models/gemini-embedding-001"),
         
         # Vector Store Settings
         "FAISS_INDEX_PATH": os.getenv("FAISS_INDEX_PATH", "database/faiss_index"),

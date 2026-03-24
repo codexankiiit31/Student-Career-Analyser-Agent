@@ -76,7 +76,7 @@ const ResumeUploader = ({ onUploadSuccess }) => {
     } catch (error) {
       setUploadStatus({
         type: 'error',
-        message: error.detail || 'Failed to upload resume',
+        message: error?.detail || error?.error || error?.message || 'Failed to upload resume. Please try again.',
       });
     } finally {
       setUploading(false);
@@ -147,12 +147,7 @@ const ResumeUploader = ({ onUploadSuccess }) => {
           )}
           <div className="status-content">
             <p className="status-message">{uploadStatus.message}</p>
-            {uploadStatus.data && (
-              <div className="status-details">
-                <span>📄 Length: {uploadStatus.data.resume_length} characters</span>
-                <span>📝 Words: {uploadStatus.data.word_count}</span>
-              </div>
-            )}
+
           </div>
         </div>
       )}

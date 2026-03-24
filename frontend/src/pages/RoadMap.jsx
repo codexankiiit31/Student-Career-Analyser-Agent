@@ -1,24 +1,26 @@
 // RoadMap.jsx — Interactive week-by-week timeline with download
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import apiService from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Map,
-  Loader2,
+  BookOpen,
+  Target,
+  Wrench,
   ChevronDown,
   ChevronUp,
-  Download,
-  RefreshCw,
-  BookOpen,
-  Wrench,
-  Target,
   Clock,
-  Lightbulb,
   CheckCircle,
-  Zap,
+  Loader2,
   AlertCircle,
-  RotateCcw
+  RotateCcw,
+  Download,
+  Zap,
+  Lightbulb
 } from "lucide-react";
 import "../Styles/RoadMap.css";
+import { jsPDF } from "jspdf";
+
 
 const PHASE_COLORS = {
   Beginner: { bg: "#10b981", light: "rgba(16,185,129,0.12)", text: "#34d399" },
@@ -177,12 +179,50 @@ ${outcomes.map((o, i) => `${i + 1}. ${o}`).join("\n")}
 /* ─── Main Component ────────────────────── */
 
 export default function RoadMap() {
-  const [form, setForm] = useState({ course: "", duration: "3", technology: "" });
+  const [form, setForm] = useState(() => {
+    const saved = sessionStorage.getItem("rm_form");
+    return saved ? JSON.parse(saved) : { course: "", duration: "3", technology: "" };
+  });
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState("");
-  const [data, setData] = useState(null);          // structured roadmap JSON
+  const [data, setData] = useState(() => {
+    const saved = sessionStorage.getItem("rm_data");
+    return saved ? JSON.parse(saved) : null;
+  });          // structured roadmap JSON
   const [openWeeks, setOpenWeeks] = useState({});   // { [weekIndex]: bool }
   const [expandAll, setExpandAll] = useState(false);
+
+  // Preserve form and data in sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem("rm_form", JSON.stringify(form));
+  }, [form]);
+
+  useEffect(() => {
+    if (data) {
+      sessionStorage.setItem("rm_data", JSON.stringify(data));
+    } else {
+      sessionStorage.removeItem("rm_data");
+    }
+  }, [data]);
+
+  const isMountedRef = React.useRef(true);
+  const stepTimerRef = React.useRef(null);
+
+  const LOADING_STEPS = [
+    "🖥️ Connecting to AI roadmap engine...",
+    "🫧 Structuring your week-by-week plan...",
+    "📚 Compiling resources & projects...",
+    "⚡ Almost done, finalising roadmap...",
+  ];
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (stepTimerRef.current) clearInterval(stepTimerRef.current);
+    };
+  }, []);
 
   const weeks = data?.weeks || [];
   const phases = data?.phases || [];
@@ -194,39 +234,44 @@ export default function RoadMap() {
     if (!form.course.trim()) { setError("Please enter a course name."); return; }
 
     setLoading(true);
+    setLoadingStep(0);
     setError("");
     setData(null);
     setOpenWeeks({});
     setExpandAll(false);
+    if (stepTimerRef.current) clearInterval(stepTimerRef.current);
+
+    // Advance loading message every 6 seconds
+    let step = 0;
+    stepTimerRef.current = setInterval(() => {
+      step = Math.min(step + 1, LOADING_STEPS.length - 1);
+      if (isMountedRef.current) setLoadingStep(step);
+    }, 6000);
 
     const query = form.technology
       ? `Give me a ${form.duration}-month roadmap to become a ${form.course} focusing on ${form.technology}`
       : `Give me a ${form.duration}-month roadmap to become a ${form.course}`;
 
     try {
-      const res = await fetch("http://localhost:8000/api/get_roadmap", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+      const json = await apiService.getRoadmap({
+        query,
+        duration_months: parseInt(form.duration)
       });
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-
-      const json = await res.json();
       const roadmap = json?.data ?? json;
-
       if (!roadmap?.weeks?.length) throw new Error("No week data returned from server.");
+      sessionStorage.setItem("rm_data", JSON.stringify(roadmap));
+      if (!isMountedRef.current) return;
       setData(roadmap);
-
-      // Auto-open first week
       setOpenWeeks({ 0: true });
       setTimeout(() => {
         document.getElementById("rm-results")?.scrollIntoView({ behavior: "smooth" });
       }, 200);
-
     } catch (err) {
-      setError(err.message || "Failed to generate roadmap.");
+      if (!isMountedRef.current) return;
+      setError(err?.detail || err?.error || err?.message || "Failed to generate roadmap. Please try again.");
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
+      if (stepTimerRef.current) { clearInterval(stepTimerRef.current); stepTimerRef.current = null; }
     }
   };
 
@@ -242,11 +287,29 @@ export default function RoadMap() {
 
   const handleDownload = () => {
     if (!data) return;
+    const doc = new jsPDF();
     const text = buildDownloadText(data.career || form.course, form, data);
-    const a = document.createElement("a");
-    a.href = "data:text/plain;charset=utf-8," + encodeURIComponent(text);
-    a.download = `${(data.career || form.course).replace(/\s+/g, "_")}_roadmap.txt`;
-    a.click();
+    
+    // Auto-wrap text to fit within A4 width (180mm of 210mm)
+    const lines = doc.splitTextToSize(text, 180);
+    
+    let y = 15;
+    const pageHeight = doc.internal.pageSize.height;
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+
+    lines.forEach(line => {
+      // If adding this line exceeds page height, create a new page
+      if (y > pageHeight - 15) {
+        doc.addPage();
+        y = 15;
+      }
+      doc.text(line, 15, y);
+      y += 6; // line spacing
+    });
+
+    doc.save(`${(data.career || form.course).replace(/\s+/g, "_")}_roadmap.pdf`);
   };
 
   return (
@@ -312,8 +375,8 @@ export default function RoadMap() {
       {loading && (
         <div className="rm-loading">
           <Loader2 size={38} className="rm-spin" />
-          <p>Building your personalised roadmap…</p>
-          <span>This usually takes 15–30 seconds</span>
+          <p>{LOADING_STEPS[loadingStep]}</p>
+          <span>Roadmap generation takes 15–30 seconds</span>
         </div>
       )}
 

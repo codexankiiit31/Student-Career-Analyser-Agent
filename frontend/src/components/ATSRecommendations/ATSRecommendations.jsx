@@ -4,7 +4,6 @@ import {
   FileText,
   ListChecks,
   Layers,
-  Target,
   AlertTriangle
 } from "lucide-react";
 import "./ATSRecommendations.css";

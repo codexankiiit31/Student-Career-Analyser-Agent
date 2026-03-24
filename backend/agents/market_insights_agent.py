@@ -3,10 +3,11 @@ from typing import Dict, Any, List
 
 from pydantic import BaseModel
 from langchain_core.prompts import PromptTemplate
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 
 from utils.llm_utils import get_llm_groq
 from scraping.market_insights_scraping import scrape_market_data
+from utils.ws_logger import send_log
 
 
 # =================================================
@@ -126,13 +127,14 @@ class MarketAnalysisAgent:
         # Run LLM
         # -----------------------------
         try:
+            send_log(f"🧠 Synthesizing {len(sources)} sources into comprehensive Market Report...")
             result = self.chain.invoke(
                 {
                     "career": role,
                     "raw_text": raw_text
                 }
             )
-            output = result.dict()
+            output = result.model_dump()
 
         except Exception as e:
             print(f"❌ Market agent failed: {e}")
@@ -170,5 +172,5 @@ class MarketAnalysisAgent:
                 salary_summary="Not available"
             ),
             summary_advice="Not available"
-        ).dict()
+        ).model_dump()
 # =================================================

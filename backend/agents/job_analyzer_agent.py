@@ -11,6 +11,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.runnables import RunnableParallel, RunnableLambda
 
 from utils.llm_utils import get_llm
+from utils.ws_logger import send_log
 
 
 # -------------------------------------------------
@@ -193,6 +194,7 @@ class CareerAgent:
     # ----------------------------------------------
     def _analyze_resume_and_job(self, resume: str, job: str) -> dict:
         logger.info("Stage 1: Parallel resume & job extraction")
+        send_log("📄 Parsing Resume and extracting core competencies...")
 
         resume_clean = self._truncate(resume, self.RESUME_MAX_CHARS, "Resume")
         job_clean = self._truncate(job, self.JOB_MAX_CHARS, "Job Description")
@@ -233,6 +235,7 @@ class CareerAgent:
     # ----------------------------------------------
     def unified_analysis(self, resume: str, job: str) -> dict:
         logger.info("Stage 2: Unified ATS + match analysis")
+        send_log("⚙️ Calculating ATS Score and identifying missing keywords...")
 
         resume_clean = self._truncate(resume, self.RESUME_MAX_CHARS, "Resume")
         job_clean = self._truncate(job, self.JOB_MAX_CHARS, "Job Description")
@@ -276,6 +279,7 @@ class CareerAgent:
     # ----------------------------------------------
     def generate_cover_letter(self, resume: str, job: str) -> dict:
         logger.info("Generating cover letter")
+        send_log("✍️ Drafting personalized Cover Letter...")
 
         resume_clean = self._truncate(resume, self.RESUME_MAX_CHARS, "Resume")
         job_clean = self._truncate(job, self.JOB_MAX_CHARS, "Job Description")

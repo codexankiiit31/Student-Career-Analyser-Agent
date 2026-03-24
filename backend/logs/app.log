@@ -1,0 +1,45 @@
+2026-03-24 12:47:41,065 [INFO] main: Starting up — initializing agents...
+2026-03-24 12:47:41,092 [INFO] agents.job_analyzer_agent: CareerAgent initialized
+2026-03-24 12:47:54,302 [INFO] main: Shutting down — agents released.
+2026-03-24 12:48:04,194 [INFO] main: Starting up — initializing agents...
+2026-03-24 12:48:04,224 [INFO] agents.job_analyzer_agent: CareerAgent initialized
+2026-03-24 12:48:50,836 [INFO] main: Shutting down — agents released.
+2026-03-24 12:49:09,904 [INFO] main: Starting up — initializing agents...
+2026-03-24 12:49:09,932 [INFO] agents.job_analyzer_agent: CareerAgent initialized
+2026-03-24 12:49:52,265 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:49:55,862 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:49:58,902 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:01,824 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:04,911 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:07,928 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:10,866 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:13,837 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:18,623 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:20,666 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:27,954 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:28,119 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:29,000 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:31,626 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:50:31,665 [INFO] httpx: HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-03-24 12:50:34,424 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 12:51:46,638 [INFO] main: Shutting down — agents released.
+2026-03-24 13:00:50,639 [INFO] main: Starting up — initializing agents...
+2026-03-24 13:00:50,719 [INFO] agents.job_analyzer_agent: CareerAgent initialized
+2026-03-24 13:01:04,885 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 13:01:06,591 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/user_data?select=%2A&user_id=eq.38228669-4d86-460c-a833-8b78d11da647 "HTTP/2 200 OK"
+2026-03-24 13:01:21,340 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 13:01:22,409 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/user_data?select=%2A&user_id=eq.38228669-4d86-460c-a833-8b78d11da647 "HTTP/2 200 OK"
+2026-03-24 13:19:05,261 [INFO] main: Shutting down — agents released.
+2026-03-24 13:19:12,933 [INFO] main: Starting up — initializing agents...
+2026-03-24 13:19:12,952 [INFO] agents.job_analyzer_agent: CareerAgent initialized
+2026-03-24 13:19:18,671 [INFO] main: Shutting down — agents released.
+2026-03-24 13:19:24,637 [INFO] main: Starting up — initializing agents...
+2026-03-24 13:19:24,652 [INFO] agents.job_analyzer_agent: CareerAgent initialized
+2026-03-24 13:20:22,738 [INFO] main: Shutting down — agents released.
+2026-03-24 13:20:29,138 [INFO] main: Starting up — initializing agents...
+2026-03-24 13:20:29,153 [INFO] agents.job_analyzer_agent: CareerAgent initialized
+2026-03-24 13:29:33,846 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 13:29:34,150 [INFO] httpx: HTTP Request: POST https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/user_data?on_conflict=user_id "HTTP/2 200 OK"
+2026-03-24 13:35:30,372 [INFO] httpx: HTTP Request: GET https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/users?select=%2A&username=eq.Ajit+kumar "HTTP/2 200 OK"
+2026-03-24 13:35:31,226 [INFO] httpx: HTTP Request: POST https://wpokdkvszpnhafwfvnxv.supabase.co/rest/v1/user_data?on_conflict=user_id "HTTP/2 200 OK"
+2026-03-24 13:35:44,955 [INFO] main: Shutting down — agents released.
