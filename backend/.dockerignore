@@ -17,3 +17,6 @@ coverage.xml
 *.log
 .pytest_cache/
 .env
+.careervnv/
+faiss_index/
+logs/

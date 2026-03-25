@@ -27,7 +27,6 @@ jobs:
       - name: Install lightweight dependencies only
         run: |
           pip install --upgrade pip
-          # Install only the non-ML packages for a fast validation check
           pip install fastapi uvicorn python-dotenv pydantic
 
       - name: Check Python syntax (all .py files)

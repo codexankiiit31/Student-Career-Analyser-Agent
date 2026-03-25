@@ -1,5 +1,6 @@
 .git
 .vscode
+.careervnv
 venv
 __pycache__
 *.pyc
@@ -22,3 +23,9 @@ node_modules/
 build/
 dist/
 .env
+.careervnv/
+backend/.careervnv/
+faiss_index/
+backend/faiss_index/
+logs/
+backend/logs/

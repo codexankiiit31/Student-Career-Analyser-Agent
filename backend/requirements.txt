@@ -35,7 +35,7 @@ openai==1.82.0
 # ── Embeddings & Vector Operations ─────────────────────────────
 pinecone==7.3.0
 langchain-pinecone==0.2.9
-sentence-transformers==5.3.0
+# sentence-transformers==5.3.0
 
 # ── File Parsing (Resume PDFs / DOCX) ──────────────────────────
 PyMuPDF==1.24.10
@@ -56,7 +56,7 @@ websockets==15.0.1
 
 # ── Text Processing ────────────────────────────────────────────
 nltk==3.9.1
-spacy==3.8.11
+# spacy==3.8.11
 
 # ── Web Scraping ───────────────────────────────────────────────
 beautifulsoup4==4.12.3

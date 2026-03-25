@@ -107,6 +107,8 @@ import os
 allowed_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://student-career-analyser-agent.vercel.app",
+    "https://student-career-analyser-agent-git-main-codexankiiit31s-projects.vercel.app",
 ]
 
 # Add production frontend URL if it exists
