@@ -37,8 +37,8 @@
 | Service | URL | Platform |
 |:---|:---|:---:|
 | 🖥️ **Frontend** | [https://student-career-analyser.vercel.app](https://student-career-analyser-agent.vercel.app/) | Vercel |
-| ⚙️ **Backend API** | [https://student-career-analyser-api.onrender.com](https://student-career-analyser-api.onrender.com) | Render |
-| 📖 **Swagger Docs** | [https://student-career-analyser-api.onrender.com/docs](https://student-career-analyser-api.onrender.com/docs) | Render |
+| ⚙️ **Backend API** | [https://student-career-analyser-api.onrender.com](https://aicareeragent-backend.onrender.com) | Render |
+| 📖 **Swagger Docs** | [https://student-career-analyser-api.onrender.com/docs](https://aicareeragent-backend.onrender.com/docs) | Render |
 
 > ⚠️ The backend is hosted on Render's free tier — it may take **~30 seconds** to cold-start if inactive.
 
