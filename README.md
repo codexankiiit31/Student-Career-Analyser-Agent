@@ -36,7 +36,7 @@
 
 | Service | URL | Platform |
 |:---|:---|:---:|
-| 🖥️ **Frontend** | [https://student-career-analyser.vercel.app](https://student-career-analyser.vercel.app) | Vercel |
+| 🖥️ **Frontend** | [https://student-career-analyser.vercel.app](https://student-career-analyser-agent.vercel.app/) | Vercel |
 | ⚙️ **Backend API** | [https://student-career-analyser-api.onrender.com](https://student-career-analyser-api.onrender.com) | Render |
 | 📖 **Swagger Docs** | [https://student-career-analyser-api.onrender.com/docs](https://student-career-analyser-api.onrender.com/docs) | Render |
 
