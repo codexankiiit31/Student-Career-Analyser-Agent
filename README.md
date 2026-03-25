@@ -11,6 +11,8 @@
   <img src="https://img.shields.io/badge/Groq_LLaMA-FF6B35?style=for-the-badge&logo=meta&logoColor=white" />
   <img src="https://img.shields.io/badge/LangChain-121212?style=for-the-badge&logo=chainlink&logoColor=white" />
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" />
+  <img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black" />
 </p>
 
 <p align="center">
@@ -19,6 +21,7 @@
   <img src="https://img.shields.io/badge/PRs-Welcome-ec4899?style=flat-square" />
   <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white" />
   <img src="https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white" />
+  <img src="https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white" />
 </p>
 
 ---
@@ -26,6 +29,18 @@
 > **AI Career Agent** is a full-stack, AI-powered career intelligence platform built for students and modern professionals. Upload your resume and a job description to instantly receive ATS optimization scores, skill gap analysis, real-time market insights, AI-generated cover letters, and personalized week-by-week learning roadmaps — all powered by a multi-agent LangChain architecture.
 
 <br/>
+
+---
+
+## 🌐 Live Demo
+
+| Service | URL | Platform |
+|:---|:---|:---:|
+| 🖥️ **Frontend** | [https://student-career-analyser.vercel.app](https://student-career-analyser.vercel.app) | Vercel |
+| ⚙️ **Backend API** | [https://student-career-analyser-api.onrender.com](https://student-career-analyser-api.onrender.com) | Render |
+| 📖 **Swagger Docs** | [https://student-career-analyser-api.onrender.com/docs](https://student-career-analyser-api.onrender.com/docs) | Render |
+
+> ⚠️ The backend is hosted on Render's free tier — it may take **~30 seconds** to cold-start if inactive.
 
 ---
 
@@ -43,12 +58,12 @@
 
 ## 📋 Table of Contents
 
+- [🌐 Live Demo](#-live-demo)
 - [🏗️ Architecture](#️-architecture)
 - [🛠️ Tech Stack](#️-tech-stack)
+- [🚀 CI/CD Pipeline](#-cicd-pipeline)
+- [☁️ Deployment](#️-deployment)
 - [📂 Project Structure](#-project-structure)
-- [🚀 Quick Start](#-quick-start)
-  - [Local Setup](#local-setup)
-  - [Docker Setup](#docker-setup)
 - [🔑 Environment Variables](#-environment-variables)
 - [📡 API Reference](#-api-reference)
 - [🤖 AI Agents Deep Dive](#-ai-agents-deep-dive)
@@ -65,11 +80,11 @@ The system is designed around a clean separation of concerns: a React frontend c
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        👤  USER                                  │
-│                   React App  :3000                               │
+│               React App  (Vercel :443)                           │
 └──────────────────────────┬──────────────────────────────────────┘
                            │  HTTP / StreamingResponse
 ┌──────────────────────────▼──────────────────────────────────────┐
-│                  FastAPI Backend  :8000                           │
+│              FastAPI Backend  (Render :443)                       │
 │           Pydantic v2  ·  BackgroundTasks  ·  Uvicorn            │
 └──────────────────────────┬──────────────────────────────────────┘
                            │  LangChain LCEL
@@ -107,6 +122,85 @@ The system is designed around a clean separation of concerns: a React frontend c
 | **Web Scraping** | SerpAPI |
 | **Document Parsing** | PyMuPDF (PDF) · python-docx (DOCX) |
 | **Containerization** | Docker · Docker Compose |
+| **Frontend Hosting** | Vercel |
+| **Backend Hosting** | Render |
+| **CI/CD** | GitHub Actions |
+
+---
+
+## 🚀 CI/CD Pipeline
+
+This project uses **GitHub Actions** for a fully automated CI/CD pipeline. Every push to the `main` branch triggers the following workflow:
+
+```
+push to main
+      │
+      ▼
+┌─────────────────────────┐
+│   1. Run Tests & Lint   │  ← pytest (backend) + ESLint (frontend)
+└────────────┬────────────┘
+             │  ✅ all checks pass
+      ┌──────┴──────┐
+      ▼             ▼
+┌──────────┐  ┌──────────────┐
+│  Deploy  │  │    Deploy    │
+│ Frontend │  │   Backend    │
+│  Vercel  │  │    Render    │
+└──────────┘  └──────────────┘
+```
+
+**Pipeline stages:**
+
+| Stage | Tool | What it does |
+|:---|:---|:---|
+| 🧪 **Test** | `pytest` + ESLint | Runs backend unit tests and frontend lint checks |
+| 🏗️ **Build** | Vercel CLI / Render | Builds production artifacts for both services |
+| 🚢 **Deploy Frontend** | Vercel | Auto-deploys React app on every successful test run |
+| ⚙️ **Deploy Backend** | Render | Auto-deploys FastAPI service via Render deploy hook |
+
+The workflow file lives at `.github/workflows/ci-cd.yml`. Both deployments run in **parallel** after tests pass, keeping total pipeline time minimal.
+
+---
+
+## ☁️ Deployment
+
+### Frontend — Vercel
+
+The React app is deployed on **Vercel** with zero-config automatic deployments.
+
+**Live URL:** `https://student-career-analyser.vercel.app`
+
+Key settings:
+- **Build command:** `npm run build`
+- **Output directory:** `build`
+- **Root directory:** `frontend/`
+- **Environment variable:** `REACT_APP_API_URL` → your Render backend URL
+
+### Backend — Render
+
+The FastAPI backend is deployed on **Render** as a web service.
+
+**Live API:** `https://student-career-analyser-api.onrender.com`
+
+Key settings:
+- **Build command:** `pip install -r requirements.txt`
+- **Start command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- **Root directory:** `backend/`
+- Environment variables: set `GEMINI_API_KEY`, `GROQ_API_KEY`, `SERPAPI_API_KEY` in Render's dashboard
+
+> 💡 For production, set `CORS` origins in `main.py` to your Vercel frontend URL.
+
+### Docker (Self-hosted)
+
+Spin up the entire stack locally with one command:
+
+```bash
+docker-compose up --build
+```
+
+Both services start automatically — FastAPI on `:8000` and React on `:3000`.
+
+> ⚠️ Ensure `backend/.env` exists before running Docker.
 
 ---
 
@@ -114,6 +208,10 @@ The system is designed around a clean separation of concerns: a React frontend c
 
 ```
 Student-Career-Analyser-Agent/
+│
+├── 📁 .github/
+│   └── workflows/
+│       └── ci-cd.yml               # GitHub Actions CI/CD pipeline
 │
 ├── 📁 backend/                     # Python FastAPI application
 │   ├── main.py                     # App entrypoint & route definitions
@@ -148,15 +246,13 @@ Student-Career-Analyser-Agent/
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local Setup)
 
 ### Prerequisites
 
 - **Python 3.11+**
 - **Node.js 18+**
 - API Keys — see [Environment Variables](#-environment-variables)
-
-### Local Setup
 
 **1. Clone the repository**
 
@@ -208,20 +304,6 @@ npm start
 
 ---
 
-### Docker Setup
-
-Spin up the entire stack with one command:
-
-```bash
-docker-compose up --build
-```
-
-Both services start automatically — FastAPI on `:8000` and React on `:3000`.
-
-> ⚠️ Ensure `backend/.env` exists before running Docker.
-
----
-
 ## 🔑 Environment Variables
 
 | Variable | Required | Description |
@@ -229,12 +311,13 @@ Both services start automatically — FastAPI on `:8000` and React on `:3000`.
 | `GEMINI_API_KEY` | ✅ | Google Gemini Flash — powers resume analysis & chatbot. Get from [Google AI Studio](https://aistudio.google.com/) |
 | `GROQ_API_KEY` | ✅ | Groq — fast LLaMA 3.3 inference for market analysis. Get from [console.groq.com](https://console.groq.com/) |
 | `SERPAPI_API_KEY` | ⚠️ Optional | Live job/salary scraping. Without it, market data falls back to static mode. Get from [serpapi.com](https://serpapi.com/) |
+| `REACT_APP_API_URL` | ✅ (prod) | Backend API base URL — set in Vercel dashboard for production builds |
 
 ---
 
 ## 📡 API Reference
 
-**Base URL:** `http://localhost:8000`  
+**Base URL:** `https://student-career-analyser-api.onrender.com`  
 All endpoints accept/return `application/json` unless marked otherwise.
 
 <details>
@@ -366,7 +449,7 @@ The backend uses **4 specialized LangChain agents** built with LCEL pipe syntax 
 | 🏛️ [`architecture.md`](./docs/architecture.md) | System design, data flow, and layer breakdown |
 | 📡 [`api_reference.md`](./docs/api_reference.md) | Full REST endpoint schemas |
 | 🤖 [`agents_overview.md`](./docs/agents_overview.md) | Deep dive into each LangChain agent |
-| 🐳 [`deployment.md`](./docs/deployment.md) | Docker and production deployment guide |
+| 🐳 [`deployment.md`](./docs/deployment.md) | Docker, Vercel, and Render deployment guide |
 
 ---
 
@@ -388,7 +471,7 @@ git commit -m "feat: add your feature description"
 git push origin feature/your-feature-name
 ```
 
-Please update relevant docs and tests along with your changes.
+The CI pipeline will automatically run tests on your PR. Please ensure all checks pass before requesting a review.
 
 ---
 
